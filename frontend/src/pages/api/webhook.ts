@@ -21,6 +21,7 @@ export default async function handler(
         } catch (e) {
           console.log('Failed to add User because: ', e)
         }
+        break
       default:
         res.status(400).json({ message: `Wrong Event Received: ${JSON.stringify(req.body)}` })
     }
