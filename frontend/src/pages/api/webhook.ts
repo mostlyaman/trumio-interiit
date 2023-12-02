@@ -10,6 +10,9 @@ export default async function handler(
   res: NextApiResponse<ResponseData>
 ) {
   if(req.method === 'POST') {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if(!req.body?.data?.id) res.status(400).json({ message: 'Id not found.' })
+
     const event = req.body as WebhookEvent
     switch(event.type) {
       case 'email.created':
