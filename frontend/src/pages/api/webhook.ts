@@ -15,8 +15,14 @@ export default async function handler(
 
     const event = req.body as WebhookEvent
     switch(event.type) {
-      case 'email.created':
-        await db.user.create({ data: { id: event.data.id } })
+      case 'user.created':
+        try {
+          await db.user.create({ data: { id: event.data.id } })
+        } catch (e) {
+          console.log('Failed to add User because: ', e)
+        }
+      default:
+        res.status(400).json({ message: `Wrong Event Received: ${JSON.stringify(req.body)}` })
     }
     res.status(200).json({ message: `User created: ${event.data.id}` })
   } else {
