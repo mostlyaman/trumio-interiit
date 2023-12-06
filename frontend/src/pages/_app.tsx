@@ -5,10 +5,7 @@ import { Theme } from '@radix-ui/themes';
 import Navbar from "~/components/Navbar";
 import '@radix-ui/themes/styles.css';
 import { Montserrat } from 'next/font/google'
-import "~/styles/globals.css";
-import Chat from "../components/chat/Chat";
-import Project from "~/components/project/Project";
-import Team from "~/components/team/Team";
+import "~/styles/globals.css";  
 
 const mont = Montserrat({ subsets: ['latin'] })
 
@@ -17,10 +14,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
     <ClerkProvider {...pageProps}>
       <Theme>
         <Navbar />
-        {/* <Component className = {mont.className} {...pageProps} />; */}
-        {/* <Project/> */}
-        {/* <Team/> */}
-        <Chat/>
+        <Component {...pageProps}/>
       </Theme>
     </ClerkProvider>
   )
