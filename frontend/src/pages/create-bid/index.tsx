@@ -1,6 +1,3 @@
-import Head from "next/head";
-import Link from "next/link";
-import PersonalIcon from "~/components/icons/PersonaIcon";
 import { Avatar } from "@radix-ui/themes";
 import StarIcon from "~/components/icons/StarIcon";
 import AttachIcon from "~/components/icons/AttachIcon";
@@ -9,19 +6,31 @@ import TickIcon from "~/components/icons/TickIcon";
 import InfoIcon from "~/components/icons/InfoIcon";
 import RightIcon from "~/components/icons/RightIcon";
 import { ChevronLeftIcon, PlusIcon } from "@radix-ui/react-icons";
-import * as Accordian from "@radix-ui/react-accordion";
 import { useState } from "react";
 
 interface Milestone {
-  name: string,
-  description: string,
-  duration: number,
-  cost: number,
-  deliverables: string
+  name?: string | undefined;
+  description?: string;
+  duration?: number;
+  cost?: number;
+  deliverables?: string;
 }
 
 export default function Home() {
-  const [milestones, setMiles] = useState<Milestone[]>([])
+  const [milestones, setMiles] = useState<Milestone[]>([]);
+  const [arr,setArr] = useState<JSX.Element[]>([<MilesStonesComp
+    name="Milestone-1"
+    index={0}
+    setMiles={setMiles}
+  />])
+
+  const handleAdd = () =>{
+    setArr(prev => [...prev,<MilesStonesComp
+      name={`Milestone-${prev.length + 1}`}
+      index={prev.length}
+      setMiles={setMiles}
+    />])
+  }
 
   return (
     <>
@@ -142,8 +151,8 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              <MilesStonesComp name = "Milestone-1" />
-              <div className="mt-3 flex items-center gap-2 text-[#0065C1] cursor-pointer">
+              {arr.map((value,index) => value)}
+              <div className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]" onClick={handleAdd}>
                 <span>
                   <PlusIcon />
                 </span>
@@ -195,7 +204,7 @@ export default function Home() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-[#0065C1] cursor-pointer">
+              <div className="flex cursor-pointer items-center gap-2 text-[#0065C1]">
                 <span className="rounded-full bg-[#D9E9F5] p-1">
                   <ChevronLeftIcon />{" "}
                 </span>
@@ -214,99 +223,232 @@ export default function Home() {
   );
 }
 
-function MilesStonesComp({name}:{name:string}){
+function MilesStonesComp({
+  name,
+  index,
+  setMiles,
+}: {
+  name: string;
+  index: number;
+  setMiles: React.Dispatch<React.SetStateAction<Milestone[]>>;
+}) {
+  const [duration, setDuration] = useState<number | undefined>(undefined);
+  const [cost, setCost] = useState<number | undefined>(undefined);
+  const [milename, setMilename] = useState<string | undefined>(undefined);
+  const [desc, setDesc] = useState<string | undefined>(undefined);
+  const [deliverable, setDeliverable] = useState<string | undefined>(undefined);
+
+  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setDuration(value);
+
+    setMiles((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      if (!updatedMilestones[index]) {
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          duration: value,
+        };
+      } else {
+        updatedMilestones[index] = {
+          name: name,
+          description: "",
+          duration: value,
+          cost: 0,
+          deliverables: "",
+        };
+      }
+      return updatedMilestones;
+    });
+  };
+  const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    setCost(value);
+    setMiles((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      if (!updatedMilestones[index]) {
+        updatedMilestones[index] = {
+          name: "",
+          description:"",
+          duration: value,
+          cost: 0,
+          deliverables: ""
+        };
+      }
+      else{
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          cost: value,
+        };
+      }
+      return updatedMilestones;
+    });
+  };
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMilename(e.target.value);
+    setMiles((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      if (!updatedMilestones[index]) {
+        updatedMilestones[index] = {
+          name: e.target.value,
+          description: "",
+          duration: 0,
+          cost: 0,
+          deliverables: "",
+        };
+      }
+      else{
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          name: e.target.value,
+        };
+      }
+      return updatedMilestones;
+    });
+  };
+  const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDesc(e.target.value);
+    setMiles((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      if (!updatedMilestones[index]) {
+        updatedMilestones[index] = {
+          name: "",
+          description:e.target.value,
+          duration: 0,
+          cost: 0,
+          deliverables: "",
+        };
+      }
+      else{
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          description: e.target.value,
+        };
+      }
+      return updatedMilestones;
+    });
+  };
+  const handleDeliverablesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDeliverable(e.target.value);
+    setMiles((prevMilestones) => {
+      const updatedMilestones = [...prevMilestones];
+      if (!updatedMilestones[index]) {
+        updatedMilestones[index] = {
+          name: "",
+          description:"",
+          duration: 0,
+          cost: 0,
+          deliverables: e.target.value
+        };
+      }
+      else{
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          deliverables: e.target.value,
+        };
+      }
+      return updatedMilestones;
+    });
+  };
   return (
     <>
-              <div className="mt-5 flex flex-col justify-between gap-5 rounded-md bg-[#FFFFFF] p-4 shadow-md">
-                <div className="flex w-[100%] justify-between">
-                  <span>{name}</span>
-                  <div className="flex gap-2 text-sm">
-                    <div className="flex flex-col gap-3">
-                      <span>
-                        Duration<span className="text-red-500">*</span>
-                      </span>
-                      <span className="relative">
-                        <input
-                          type="number"
-                          name="duration"
-                          placeholder="Enter"
-                          id="date"
-                          className=" rounded-md border px-2 py-2"
-                          required
-                        />
-                        <i className="absolute right-9 top-2">w</i>
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <span>
-                        Talent Cost<span className="text-red-500">*</span>
-                      </span>
-                      <span className="relative">
-                        <input
-                          type="number"
-                          name="talent cost"
-                          placeholder="Enter"
-                          id="date"
-                          className=" rounded-md border px-2 py-2"
-                          required
-                        />
-                        <i className="absolute right-9 top-2">$</i>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mb-5 flex justify-between gap-5">
-                  <div className="flex flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
-                    <span>Milestone Details</span>
-                    <div className="mt-3 flex flex-col gap-4">
-                      <div>
-                        <label
-                          htmlFor="first_name"
-                          className="mb-2 block text-sm"
-                        >
-                          Milestone Name<span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          id="first_name"
-                          className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                          placeholder="Enter name"
-                          minLength={4}
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="message" className="mb-2 block text-sm">
-                          Description
-                        </label>
-                        <textarea
-                          id="message"
-                          rows={4}
-                          className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm"
-                          placeholder="Enter description in 500 characters"
-                        ></textarea>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex h-[max-content] flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
-                    <div>Deliverable Details</div>
-                    <input
-                      type="text"
-                      id="deliverable"
-                      className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter deliverable"
-                      minLength={4}
-                      required
-                    />
-                    <div className="mt-3 flex items-center gap-2 text-[#0065C1] cursor-pointer">
-                      <span className="rounded-full bg-[#E0F0FC] p-2">
-                        <PlusIcon />
-                      </span>
-                      <span>Add Deliverable</span>
-                    </div>
-                  </div>
-                </div>
+      <div className="mt-5 flex flex-col justify-between gap-5 rounded-md bg-[#FFFFFF] p-4 shadow-md">
+        <div className="flex w-[100%] justify-between">
+          <span>{name}</span>
+          <div className="flex gap-2 text-sm">
+            <div className="flex flex-col gap-3">
+              <span>
+                Duration<span className="text-red-500">*</span>
+              </span>
+              <span className="relative">
+                <input
+                  type="number"
+                  name="duration"
+                  value={duration || ""}
+                  onChange={handleDurationChange}
+                  placeholder="Enter"
+                  id="date"
+                  className=" rounded-md border px-2 py-2"
+                  required
+                />
+                <i className="absolute right-9 top-2">w</i>
+              </span>
+            </div>
+            <div className="flex flex-col gap-3">
+              <span>
+                Talent Cost<span className="text-red-500">*</span>
+              </span>
+              <span className="relative">
+                <input
+                  type="number"
+                  name="talent cost"
+                  placeholder="Enter"
+                  value={cost || ""}
+                  onChange={handleCostChange}
+                  id="date"
+                  className=" rounded-md border px-2 py-2"
+                  required
+                />
+                <i className="absolute right-9 top-2">$</i>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="mb-5 flex justify-between gap-5">
+          <div className="flex flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
+            <span>Milestone Details</span>
+            <div className="mt-3 flex flex-col gap-4">
+              <div>
+                <label htmlFor="first_name" className="mb-2 block text-sm">
+                  Milestone Name<span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="first_name"
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter name"
+                  value={milename || ""}
+                  onChange={handleNameChange}
+                  minLength={4}
+                  required
+                />
               </div>
+              <div>
+                <label htmlFor="message" className="mb-2 block text-sm">
+                  Description
+                </label>
+                <textarea
+                  id="message"
+                  value={desc || ""}
+                  onChange={handleDescChange}
+                  rows={4}
+                  className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm"
+                  placeholder="Enter description in 500 characters"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+          <div className="flex h-[max-content] flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
+            <div>Deliverable Details</div>
+            <input
+              type="text"
+              id="deliverable"
+              className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Enter deliverable"
+              minLength={4}
+              value={deliverable || ""}
+              onChange={handleDeliverablesChange}
+              required
+            />
+            <div className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]">
+              <span className="rounded-full bg-[#E0F0FC] p-2">
+                <PlusIcon />
+              </span>
+              <span>Add Deliverable</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
-  )
+  );
 }
