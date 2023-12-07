@@ -7,6 +7,9 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const { userId } = useAuth()
+
+  const { data, isLoading } = api.post.hello.useQuery({ text: 'World' })
+  data?.greeting
   return (
     <>
       <Head>
