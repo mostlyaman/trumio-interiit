@@ -23,7 +23,6 @@ export default function Home() {
   const handleClick = () =>{
     setPreview((prev) => !prev)
   }
-
   return (
     <>
       <div className="items flex min-h-[100vh] justify-center bg-[#F8F8F8] pb-[2rem]">
