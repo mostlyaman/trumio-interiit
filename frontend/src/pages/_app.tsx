@@ -13,7 +13,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <ClerkProvider {...pageProps}>
       <Theme>
-        <Navbar />
+        {/* <Navbar /> */}
         <Component {...pageProps}/>
       </Theme>
     </ClerkProvider>
