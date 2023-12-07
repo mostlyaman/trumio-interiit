@@ -41,6 +41,16 @@ class Milestone(BaseModel):
     duration: str
 
 
+class MilestonesRequest(BaseModel):
+    project_name: str
+    project_description: str
+    project_duration: str
+    project_listing_duration: str
+    skills_required: List[str] | None
+    tools_required: List[str] | None
+    team: List[TeamMember]
+
+
 class Team(BaseModel):
     name: str
     description: str
@@ -60,4 +70,4 @@ class Project(BaseModel):
 
 
 class ProjectRequest(BaseModel):
-    project: Project
+    project: MilestonesRequest
