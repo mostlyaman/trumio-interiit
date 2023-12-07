@@ -6,6 +6,7 @@ import Navbar from "~/components/Navbar";
 import '@radix-ui/themes/styles.css';
 import { Montserrat } from 'next/font/google'
 import "~/styles/globals.css";  
+import Project from "~/components/project/Project";
 
 const mont = Montserrat({ subsets: ['latin'] })
 

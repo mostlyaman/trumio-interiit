@@ -6,7 +6,7 @@ import TickIcon from "~/components/icons/TickIcon";
 import InfoIcon from "~/components/icons/InfoIcon";
 import RightIcon from "~/components/icons/RightIcon";
 import { ChevronLeftIcon, PlusIcon } from "@radix-ui/react-icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Milestone {
   name?: string | undefined;
@@ -17,19 +17,11 @@ interface Milestone {
 }
 
 export default function Home() {
+  const [isPreview, setPreview] = useState<boolean>(false);
   const [milestones, setMiles] = useState<Milestone[]>([]);
-  const [arr,setArr] = useState<JSX.Element[]>([<MilesStonesComp
-    name="Milestone-1"
-    index={0}
-    setMiles={setMiles}
-  />])
 
-  const handleAdd = () =>{
-    setArr(prev => [...prev,<MilesStonesComp
-      name={`Milestone-${prev.length + 1}`}
-      index={prev.length}
-      setMiles={setMiles}
-    />])
+  const handleClick = () =>{
+    setPreview((prev) => !prev)
   }
 
   return (
@@ -121,96 +113,18 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg bg-[#FAFAFA] p-4 shadow-md">
-              <div className="border-b border-slate-200 pb-1">
-                Create milestones that will make it easier to work on and track
-                this project
-              </div>
-              <div className="mt-5 flex justify-between rounded-md bg-white p-4 text-sm shadow-md">
-                <div className="flex flex-col gap-3">
-                  <span>
-                    Start Date<span className="text-red-500">*</span>
-                  </span>
-                  <input
-                    required
-                    type="date"
-                    name="date"
-                    placeholder="select start date"
-                    id="date"
-                    className=" rounded-md border px-5 py-2"
-                  />
-                </div>
-                <div className="flex gap-5">
-                  <div className="mr-5 flex flex-col items-end gap-3">
-                    <span>Estimated Duration</span>
-                    <span>0w</span>
-                  </div>
-                  <div className="mr-5 flex flex-col items-end gap-3">
-                    <span>Total cost</span>
-                    <span>$ 0</span>
-                  </div>
-                </div>
-              </div>
-              {arr.map((value,index) => value)}
-              <div className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]" onClick={handleAdd}>
-                <span>
-                  <PlusIcon />
-                </span>
-                <span>Add Milestone</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4 rounded-lg bg-[#FAFAFA] p-4 shadow-md">
-              <div className="border-b border-slate-200 pb-1">Documents</div>
-              <div className="flex flex-col gap-3">
-                <div className="flex  items-center gap-1 text-xs font-normal text-gray-500 ">
-                  Upload detailed requirements document (optional)
-                  <span>
-                    <InfoIcon />
-                  </span>
-                </div>
-                <div className="flex w-full items-center justify-center">
-                  <label
-                    htmlFor="dropzone-file"
-                    className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#1E88E5] text-[#1E88E5]"
-                  >
-                    <div className="flex flex-col items-center justify-center pb-6 pt-5">
-                      <svg
-                        className="mb-4 h-8 w-8 "
-                        aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 20 16"
-                      >
-                        <path
-                          stroke="currentColor"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                        />
-                      </svg>
-                      <p className="mb-2 text-sm ">
-                        <span className="font-semibold">
-                          Drop files here or click to upload
-                        </span>
-                      </p>
-                      <p className="text-xs ">
-                        SVG, PNG, JPG or GIF (MAX. 800x400px)
-                      </p>
-                    </div>
-                    <input id="dropzone-file" type="file" className="hidden" />
-                  </label>
-                </div>
-              </div>
-            </div>
+            {isPreview ? <Preview milestones = {milestones}/> : <Addmilestone setMiles={setMiles} milestones = {milestones}/>}
             <div className="flex items-center justify-between">
-              <div className="flex cursor-pointer items-center gap-2 text-[#0065C1]">
+              <div className="flex cursor-pointer items-center gap-2 text-[#0065C1]" onClick={handleClick}>
                 <span className="rounded-full bg-[#D9E9F5] p-1">
-                  <ChevronLeftIcon />{" "}
+                  <ChevronLeftIcon />
                 </span>
                 Back
               </div>
-              <div className=" flex items-center justify-center">
+              <div
+                className=" flex items-center justify-center"
+                onClick={handleClick}
+              >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
                   Save & Continue <RightIcon />
                 </span>
@@ -227,16 +141,28 @@ function MilesStonesComp({
   name,
   index,
   setMiles,
+  milestones
 }: {
   name: string;
   index: number;
   setMiles: React.Dispatch<React.SetStateAction<Milestone[]>>;
+  milestones: Milestone[];
 }) {
   const [duration, setDuration] = useState<number | undefined>(undefined);
   const [cost, setCost] = useState<number | undefined>(undefined);
   const [milename, setMilename] = useState<string | undefined>(undefined);
   const [desc, setDesc] = useState<string | undefined>(undefined);
   const [deliverable, setDeliverable] = useState<string | undefined>(undefined);
+  
+  useEffect(() => {
+    if (milestones[index]) {
+      setDuration(milestones[index]?.duration)
+      setCost(milestones[index]?.cost)
+      setMilename(milestones[index]?.name)
+      setDesc(milestones[index]?.description)
+      setDeliverable(milestones[index]?.deliverables)
+    }
+  }, [])
 
   const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseInt(e.target.value);
@@ -246,16 +172,17 @@ function MilesStonesComp({
       const updatedMilestones = [...prevMilestones];
       if (!updatedMilestones[index]) {
         updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          duration: value,
-        };
-      } else {
-        updatedMilestones[index] = {
           name: name,
           description: "",
           duration: value,
           cost: 0,
           deliverables: "",
+        };
+
+      } else {
+        updatedMilestones[index] = {
+          ...updatedMilestones[index],
+          duration: value,
         };
       }
       return updatedMilestones;
@@ -269,13 +196,12 @@ function MilesStonesComp({
       if (!updatedMilestones[index]) {
         updatedMilestones[index] = {
           name: "",
-          description:"",
+          description: "",
           duration: value,
           cost: 0,
-          deliverables: ""
+          deliverables: "",
         };
-      }
-      else{
+      } else {
         updatedMilestones[index] = {
           ...updatedMilestones[index],
           cost: value,
@@ -296,8 +222,7 @@ function MilesStonesComp({
           cost: 0,
           deliverables: "",
         };
-      }
-      else{
+      } else {
         updatedMilestones[index] = {
           ...updatedMilestones[index],
           name: e.target.value,
@@ -313,13 +238,12 @@ function MilesStonesComp({
       if (!updatedMilestones[index]) {
         updatedMilestones[index] = {
           name: "",
-          description:e.target.value,
+          description: e.target.value,
           duration: 0,
           cost: 0,
           deliverables: "",
         };
-      }
-      else{
+      } else {
         updatedMilestones[index] = {
           ...updatedMilestones[index],
           description: e.target.value,
@@ -335,13 +259,12 @@ function MilesStonesComp({
       if (!updatedMilestones[index]) {
         updatedMilestones[index] = {
           name: "",
-          description:"",
+          description: "",
           duration: 0,
           cost: 0,
-          deliverables: e.target.value
+          deliverables: e.target.value,
         };
-      }
-      else{
+      } else {
         updatedMilestones[index] = {
           ...updatedMilestones[index],
           deliverables: e.target.value,
@@ -351,6 +274,7 @@ function MilesStonesComp({
     });
   };
   return (
+    
     <>
       <div className="mt-5 flex flex-col justify-between gap-5 rounded-md bg-[#FFFFFF] p-4 shadow-md">
         <div className="flex w-[100%] justify-between">
@@ -452,3 +376,179 @@ function MilesStonesComp({
     </>
   );
 }
+const Addmilestone = ({setMiles,milestones}:{setMiles: React.Dispatch<React.SetStateAction<Milestone[]>>,milestones:Milestone[]}) => {
+  const [arr, setArr] = useState<JSX.Element[]>([
+    <MilesStonesComp milestones={milestones} name="Milestone-1" index={0} setMiles={setMiles} />,
+  ]);
+
+  const handleAdd = () => {
+    setArr((prev) => [
+      ...prev,
+      <MilesStonesComp
+        milestones={milestones}
+        name={`Milestone-${prev.length + 1}`}
+        index={prev.length}
+        setMiles={setMiles}
+      />,
+    ]);
+  };
+  
+  return (
+    <>
+      <div className="rounded-lg bg-[#FAFAFA] p-4 shadow-md">
+        <div className="border-b border-slate-200 pb-1">
+          Create milestones that will make it easier to work on and track this
+          project
+        </div>
+        <div className="mt-5 flex justify-between rounded-md bg-white p-4 text-sm shadow-md">
+          <div className="flex flex-col gap-3">
+            <span>
+              Start Date<span className="text-red-500">*</span>
+            </span>
+            <input
+              required
+              type="date"
+              name="date"
+              placeholder="select start date"
+              id="date"
+              className=" rounded-md border px-5 py-2"
+            />
+          </div>
+          <div className="flex gap-5">
+            <div className="mr-5 flex flex-col items-end gap-3">
+              <span>Estimated Duration</span>
+              <span>0w</span>
+            </div>
+            <div className="mr-5 flex flex-col items-end gap-3">
+              <span>Total cost</span>
+              <span>$ 0</span>
+            </div>
+          </div>
+        </div>
+        {arr.map((value, index) => value)}
+        <div
+          className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]"
+          onClick={handleAdd}
+        >
+          <span>
+            <PlusIcon />
+          </span>
+          <span>Add Milestone</span>
+        </div>
+      </div>
+      <div className="flex flex-col gap-4 rounded-lg bg-[#FAFAFA] p-4 shadow-md">
+        <div className="border-b border-slate-200 pb-1">Documents</div>
+        <div className="flex flex-col gap-3">
+          <div className="flex  items-center gap-1 text-xs font-normal text-gray-500 ">
+            Upload detailed requirements document (optional)
+            <span>
+              <InfoIcon />
+            </span>
+          </div>
+          <div className="flex w-full items-center justify-center">
+            <label
+              htmlFor="dropzone-file"
+              className="flex h-64 w-full cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#1E88E5] text-[#1E88E5]"
+            >
+              <div className="flex flex-col items-center justify-center pb-6 pt-5">
+                <svg
+                  className="mb-4 h-8 w-8 "
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 20 16"
+                >
+                  <path
+                    stroke="currentColor"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                  />
+                </svg>
+                <p className="mb-2 text-sm ">
+                  <span className="font-semibold">
+                    Drop files here or click to upload
+                  </span>
+                </p>
+                <p className="text-xs ">
+                  SVG, PNG, JPG or GIF (MAX. 800x400px)
+                </p>
+              </div>
+              <input id="dropzone-file" type="file" className="hidden" />
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+const Preview = ({milestones}:{milestones:Milestone[]}) => {
+
+  return (
+    <>
+      <div className="flex flex-col gap-5">
+        <div className="flex h-[max-content] flex-col rounded-md bg-white shadow-md">
+          <div className="mt-5 border-b border-slate-200 pb-1 pl-3 text-lg">
+            Project Bid Estimate
+          </div>
+          <div className="mb-[2rem] mt-3 flex gap-5 pl-3">
+            <div className="mr-5 flex flex-col gap-2">
+              <span className="font-medium">36w</span>
+              <span className="flex items-center gap-1 text-sm">
+                Estimated Duration{" "}
+                <span>
+                  <InfoIcon />
+                </span>
+              </span>
+            </div>
+            <div className="flex flex-col gap-2">
+              <span className="font-medium">$8</span>
+              <span className="flex items-center gap-1 text-sm">
+                Talent Cost
+                <span>
+                  <InfoIcon />
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="flex h-[max-content] flex-col gap-4 bg-white p-3 shadow-md">
+          <div className="mt-[1rem]">Milestones</div>
+          <div className="relative overflow-x-auto">
+            <table className="mb-[2rem] w-full rounded-md text-left text-sm rtl:text-right ">
+              <thead className="w-[100%] bg-[#F3F2F7] text-xs uppercase text-[#5E5873]">
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    PAYMENT FOR
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    MILESTONE NAME
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    AMOUNT
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+             { milestones?.map((value,index) => 
+              <>
+               <tr className="border-b bg-white">
+                  <th
+                    scope="row"
+                    className="whitespace-nowrap px-6 py-4 font-medium"
+                  >
+                    Milestone #{index+1}
+                  </th>
+                  <td className="px-6 py-4">{value.name}</td>
+                  <td className="px-6 py-4">{value.cost}</td>
+                </tr></>
+             )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
