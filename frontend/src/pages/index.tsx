@@ -7,6 +7,7 @@ import { api } from "~/utils/api";
 
 export default function Home() {
   const { userId } = useAuth()
+
   return (
     <>
       <Head>
