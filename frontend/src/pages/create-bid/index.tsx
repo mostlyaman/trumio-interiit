@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import { Milestone } from "~/store/BidStore";
 import { useBidStore } from "~/store/BidStore";
 const mont = Montserrat({ subsets: ["latin"] });
+import { api } from "~/utils/api";
 
 const TruncatedDescription = ({ description }: { description: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -76,6 +77,25 @@ export default function Home() {
       },
     });
   };
+
+  const { mutate } = api.project.createBid.useMutation();
+
+  const handleSubmit = () => {
+    const userId = 'your_user_id';
+    const bidData = bid.bid_data;
+    console.log(typeof(bidData))
+    console.log(bidData)
+
+    try {
+      const result = mutate({
+        userID: userId,
+        bid_data: bidData,
+      })
+    } catch (error) {
+      console.error('Error creating bid:', error);
+    }
+  };
+
   return (
     <>
       <div
@@ -196,7 +216,7 @@ export default function Home() {
               </div>
               <div
                 className=" flex items-center justify-center"
-                onClick={handleClick}
+                onClick={(isPreview?handleSubmit:handleClick)}
               >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
                   Save & Continue <RightIcon />

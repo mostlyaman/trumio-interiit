@@ -78,5 +78,4 @@ model Bid {
 
 created_at DateTime @default(now())
 updated_at DateTime @updatedAt
-
 }

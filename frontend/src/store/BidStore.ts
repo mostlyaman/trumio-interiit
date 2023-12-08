@@ -7,7 +7,7 @@ export interface Milestone {
   cost?: number;
   deliverables?: string;
 }
-interface BidData {
+export interface BidData {
   milestones: Milestone[];
   start_date: Date;
 }
