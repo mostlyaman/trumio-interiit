@@ -50,7 +50,6 @@ class MilestonesRequest(BaseModel):
     tools_required: List[str] | None
     team: List[TeamMember]
 
-
 class Team(BaseModel):
     name: str
     description: str
@@ -70,4 +69,58 @@ class Project(BaseModel):
 
 
 class ProjectRequest(BaseModel):
-    project: MilestonesRequest
+    project: Project
+
+
+class Commit(BaseModel):
+    sha: str
+    commit: dict
+
+
+class CommitRequest(BaseModel):
+    owner: str
+    repo: str
+
+
+class CommitsResponse(BaseModel):
+    hashes: List[str]
+
+
+class CommitResponse(BaseModel):
+    commits: List[Commit]
+
+
+class CommitDiff(BaseModel):
+    sha: str
+    diff: str
+
+
+class CommitDiffRequest(BaseModel):
+    owner: str
+    repo: str
+    commit_sha: str
+
+
+class CommitDiffResponse(BaseModel):
+    commit_diff: CommitDiff
+
+
+class CommitSummary(BaseModel):
+    commit: Commit
+    commit_diff: CommitDiff
+    summary: list[str]
+
+
+class AllCommitsSummary(BaseModel):
+    commits: List[CommitSummary]
+
+
+class AllCommitsSummaryRequest(BaseModel):
+    owner: str
+    repo: str
+
+
+# TODO: Add Project budget
+# TODO: Add Project status
+# TODO: Add Project progress
+# TODO: Add Skill required in Milestone
