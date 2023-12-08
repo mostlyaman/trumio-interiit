@@ -83,7 +83,7 @@ export default function Project() {
         <div className="h-[50vh] bg-white shadow-lg rounded-lg w-[100%] flex justify-center items-center">
           <figure className="flex flex-col justify-center items-center">
             <img
-              className="h-[200px] w-[200px] "
+              className="h-[200px] w-[200px]"
               src="/images/searching.gif"
               alt=""
             />

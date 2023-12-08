@@ -4,10 +4,10 @@ import Dropdown from "react-dropdown";
 import "react-dropdown/style.css";
 
 const InlineForm = ({ status }:any) => {
-  const [dropdown1, setDropdown1] = useState("");
-  const [dropdown2, setDropdown2] = useState("");
-  const [dropdown2drop, setDropdown2Drop] = useState("");
-  const [dropdown3, setDropdown3] = useState("");
+  const [dropdown1, setDropdown1] = useState<any>("");
+  const [dropdown2, setDropdown2] = useState<any>("");
+  const [dropdown2drop, setDropdown2Drop] = useState<any>("");
+  const [dropdown3, setDropdown3] = useState<any>("");
 
   const options1 = [
     { value: "Fixed", label: "Fixed" },
