@@ -1,16 +1,17 @@
-from openai import OpenAI
 import json
 import os
-from ..api.models import Transcript, Project
+from openai import OpenAI
+from dotenv import load_dotenv
+from api.models import Project, Transcript
 
-api_key = os.environ.get("OPENAI_API_KEY")
+load_dotenv()
+
+api_key = os.getenv("OPENAI_API_KEY")
 
 if api_key:
-    print("\n\n\n API KEY FOUND \n\n\n", api_key)
     client = OpenAI(api_key=api_key)
 else:
-    # raise Exception("OPENAI_API_KEY not found in environment variables")
-    client = OpenAI(api_key="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")
+    raise Exception("OPENAI_API_KEY not found in environment variables")
 
 
 def create_prompt(project: Project):
