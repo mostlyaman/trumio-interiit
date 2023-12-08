@@ -12,18 +12,14 @@ export const projectRouter = createTRPCRouter({
     }),
 
   getProjects: privateProcedure
-    .input(z.object({}))
-    .query(async ({ ctx: { db, userId } }) => {
-      return await db.project.findMany({
-        where: {
-          team_members: {
-            some: {
-              id: userId
-            }
-          }
-        }
-      })
-    })
+  .input(z.object({}).nullish())
+  .query(async ({ ctx:{userId,db} }) => {
+    return await db.project.findMany()
+  }),
 
-
+  createBid: privateProcedure
+  .input(z.object({userID:z.string(),bid_data:z.object({})}).nullish())
+  .query(async ({ ctx:{userId,db} }) => {
+    return await db.project.findMany()
+  }),
 });

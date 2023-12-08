@@ -30,6 +30,7 @@ model User {
   projects              Project[]
 
   messaging_password String @default(uuid())
+  bids Bid[]
 }
 
 enum Duration {
@@ -44,20 +45,38 @@ enum ProjectStatus {
 }
 
 model Project {
-  id                     String   @id @default(uuid())
-  project_name           String
-  duration_length        Int
-  duration_unit          Duration
-  description            String
-  technical_requirements Json
-  availability           Json
-  country                Json
-  payment                Json
-  nda                    Boolean
+id                     String   @id @default(uuid())
+project_name           String
+duration_length        Int
+duration_unit          Duration
+description            String
+technical_requirements Json
+availability           Json
+country                Json
+payment                Json
+nda                    Boolean
 
-  status       ProjectStatus
-  team_members User[]
+status       ProjectStatus
+team_members User[]
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+created_at DateTime @default(now())
+updated_at DateTime @updatedAt
+
+milestones          Json @default("{}")
+
+bids Bid[]
+
+}
+
+model Bid {
+  id String @id @default(uuid())
+  user User  @relation(fields: [userId], references: [id])
+  userId String
+  bid_data Json
+  project Project @relation(fields: [projectId], references: [id])
+  projectId String
+
+created_at DateTime @default(now())
+updated_at DateTime @updatedAt
+
 }

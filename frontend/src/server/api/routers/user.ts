@@ -24,6 +24,4 @@ export const userRouter = createTRPCRouter({
       // TODO: create user in messaging websocket with messaging_password
       return user
     })
-
-
 });
