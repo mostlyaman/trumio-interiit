@@ -22,7 +22,6 @@ async def get_transcript_chapters(transcript: TranscriptRequest, project: Projec
 
     return await get_chapters_from_transcription(transcript.transcript, prompt)
 
-
 @app.post("/milestones")
 async def get_milestones(project: MilestonesRequest):
     prompt = create_milestone_prompt(project)

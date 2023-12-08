@@ -50,7 +50,6 @@ class MilestonesRequest(BaseModel):
     tools_required: List[str] | None
     team: List[TeamMember]
 
-
 class Team(BaseModel):
     name: str
     description: str
@@ -70,4 +69,4 @@ class Project(BaseModel):
 
 
 class ProjectRequest(BaseModel):
-    project: MilestonesRequest
+    project: Project
