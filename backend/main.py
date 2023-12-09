@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from api.models import (
     AllCommitsSummaryRequest,
     CommitDiffRequest,
+    RepoDataRequest,
     RepoFileRequest,
     RepoFilesDescriptionRequest,
     TranscriptRequest,
@@ -59,7 +60,7 @@ async def get_milestones(project: MilestonesRequest):
 async def get_commits(request: CommitRequest):
     github_service = GithubService(token)
 
-    return github_service.get_commit_hashes(request)
+    return github_service.get_commits(request)
 
 
 @app.post("/commit-diff")
@@ -87,7 +88,7 @@ async def get_commit_summary(request: CommitDiffRequest):
 async def get_all_commits_summary(request: AllCommitsSummaryRequest):
     github_service = GithubService(token)
 
-    commits = github_service.get_commit_hashes(
+    commits = github_service.get_commits(
         CommitRequest(owner=request.owner, repo=request.repo)
     )
 
@@ -96,9 +97,11 @@ async def get_all_commits_summary(request: AllCommitsSummaryRequest):
 
     summaries = []
 
-    for commit in commits.hashes:
+    for commit in commits.commits:
         commit_diff = github_service.get_commit_diff(
-            CommitDiffRequest(owner=request.owner, repo=request.repo, commit_sha=commit)
+            CommitDiffRequest(
+                owner=request.owner, repo=request.repo, commit_sha=commit.sha
+            )
         )
 
         if commit_diff is None:
@@ -143,3 +146,15 @@ async def get_repo_files_content(request: RepoContentRequest):
 @app.post("/describe-repo")
 async def describe_repo(request: RepoFilesDescriptionRequest):
     return describe_files(request)
+
+
+@app.post("/repo-data")
+async def get_repo_data(request: RepoDataRequest):
+    github_service = GithubService(token)
+
+    data = github_service.get_all_data(request)
+
+    if data is None:
+        return None
+
+    return data

@@ -1,18 +1,28 @@
 import requests
+from services.file_describe_service import describe_files
 import utils.consts as consts
 from base64 import b64decode
 from typing import Optional
 from api.models import (
+    Commit,
+    CommitData,
     CommitDiff,
     CommitDiffRequest,
     CommitDiffResponse,
     CommitRequest,
     CommitsResponse,
+    GithubUser,
+    GithubUserProfileRequest,
     RepoContentRequest,
     RepoContentResponse,
     RepoContent,
+    RepoData,
+    RepoDataRequest,
+    RepoDataResponse,
     RepoFile,
     RepoFileRequest,
+    RepoFilesDescriptionRequest,
+    RepoFileData,
 )
 
 
@@ -38,14 +48,29 @@ class GithubService:
         else:
             return None
 
-    def get_commit_hashes(self, request: CommitRequest) -> Optional[CommitsResponse]:
+    def get_commits(self, request: CommitRequest) -> Optional[CommitsResponse]:
         url = f"https://api.github.com/repos/{request.owner}/{request.repo}/commits"
+        if request.since:
+            url += f"?since={request.since.isoformat()}"
         response = requests.get(url, headers=self.headers)
 
         if response.status_code == 200:
-            return CommitsResponse(hashes=[commit["sha"] for commit in response.json()])
-        else:
-            return None
+            return CommitsResponse(
+                commits=[
+                    Commit(
+                        sha=commit["sha"],
+                        message=commit["commit"]["message"],
+                        author=GithubUser(
+                            name=commit["commit"]["author"]["name"],
+                            email=commit["commit"]["author"]["email"],
+                            username=commit["author"]["login"],
+                            avatar_url=commit["author"]["avatar_url"],
+                        ),
+                        timestamp=commit["commit"]["author"]["date"],
+                    )
+                    for commit in response.json()
+                ]
+            )
 
     def get_directory_content(self, directory: dict) -> list[RepoContent]:
         url = directory["url"]
@@ -119,3 +144,112 @@ class GithubService:
 
         else:
             return None
+
+    def get_commit_author(
+        self, commitDiffRequest: CommitDiffRequest
+    ) -> Optional[CommitDiffResponse]:
+        url = f"https://api.github.com/repos/{commitDiffRequest.owner}/{commitDiffRequest.repo}/commits/{commitDiffRequest.commit_sha}"
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            return CommitDiffResponse(
+                commit_diff=CommitDiff(
+                    sha=commitDiffRequest.commit_sha, diff=response.text
+                )
+            )
+        else:
+            return None
+
+    def get_profile_data(
+        self, request: GithubUserProfileRequest
+    ) -> Optional[GithubUser]:
+        url = f"https://api.github.com/users/{request.username}"
+        response = requests.get(url, headers=self.headers)
+
+        if response.status_code == 200:
+            return GithubUser(
+                name=response.json()["name"],
+                email=response.json()["email"],
+                username=response.json()["login"],
+                avatar_url=response.json()["avatar_url"],
+            )
+        else:
+            return None
+
+    def get_all_data(self, request: RepoDataRequest) -> RepoDataResponse:
+        # Profile Data
+        profile = self.get_profile_data(
+            GithubUserProfileRequest(username=request.owner)
+        )
+
+        if profile is None:
+            return RepoDataResponse(
+                repo_data=None,
+                error="Profile data not found",
+            )
+
+        commits = self.get_commits(
+            CommitRequest(owner=request.owner, repo=request.repo, since=request.since)
+        )
+
+        commits_data = []
+
+        if commits:
+            for commit in commits.commits:
+                commits_data.append(
+                    CommitData(
+                        sha=commit.sha,
+                        message=commit.message,
+                        author=commit.author,
+                        timestamp=commit.timestamp,
+                    )
+                )
+
+        # Repo Files
+        files = []
+        summary = ""
+        repo_files = self.get_repo_files(
+            RepoContentRequest(owner=request.owner, repo=request.repo)
+        )
+
+        if repo_files:
+            contents = []
+            for file in repo_files.repo_content:
+                content = self.get_repo_file_content(
+                    RepoFileRequest(
+                        owner=request.owner, repo=request.repo, path=file.path
+                    )
+                )
+
+                if content:
+                    contents.append(content)
+
+            descriptions_and_summary = describe_files(
+                RepoFilesDescriptionRequest(repo_files=contents)
+            )
+
+            descriptions = descriptions_and_summary.repo_files_description
+
+            summary = descriptions_and_summary.summary
+
+            for file, description in zip(contents, descriptions):
+                files.append(
+                    RepoFileData(
+                        name=file.name,
+                        description=description.description,
+                        path=file.path,
+                        url=file.url,
+                    )
+                )
+
+        return RepoDataResponse(
+            repo_data=RepoData(
+                name=request.repo,
+                owner=profile,
+                commits=commits_data,
+                repo_files=files,
+                summary=summary,
+                url=f"https://github.com/{request.owner}/{request.repo}",
+            ),
+            error=None,
+        )
