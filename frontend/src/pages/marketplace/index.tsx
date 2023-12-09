@@ -175,7 +175,7 @@ export default function Home() {
           </div>
           <div className="flex cursor-pointer flex-col justify-center gap-5">
             {isLoading ? (
-              <Loading className="" />
+              <div className="w-[100%] justify-center items-center flex h-[50vh]"><Loading className="" /></div>
             ) : (
               data?.map((value) => {
                 return (
