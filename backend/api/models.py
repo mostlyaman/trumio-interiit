@@ -1,3 +1,4 @@
+import datetime
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -73,18 +74,28 @@ class ProjectRequest(BaseModel):
     project: Project
 
 
+class GithubUser(BaseModel):
+    name: str
+    email: str
+    username: str
+    avatar_url: str | None
+
+
 class Commit(BaseModel):
     sha: str
-    commit: dict
+    message: str
+    author: GithubUser
+    timestamp: datetime.datetime
 
 
 class CommitRequest(BaseModel):
     owner: str
     repo: str
+    since: Optional[datetime.datetime] = None
 
 
 class CommitsResponse(BaseModel):
-    hashes: List[str]
+    commits: List[Commit]
 
 
 class CommitResponse(BaseModel):
@@ -175,6 +186,51 @@ class RepoFilesDescriptionRequest(BaseModel):
 class RepoFilesDescriptionResponse(BaseModel):
     repo_files_description: List[RepoFileDescription]
     summary: str
+
+
+class CommitData(BaseModel):
+    sha: str
+    timestamp: datetime.datetime
+    author: GithubUser
+    message: str
+
+
+class RepoFileData(BaseModel):
+    name: str
+    description: str
+    path: str
+    url: str
+
+
+class RepoData(BaseModel):
+    name: str
+    owner: GithubUser
+    summary: str
+    url: str
+    commits: List[CommitData]
+    repo_files: List[RepoFileData]
+
+
+class RepoDataRequest(BaseModel):
+    owner: str
+    repo: str
+    since: Optional[datetime.datetime] = None
+
+
+class RepoDataResponse(BaseModel):
+    repo_data: RepoData | None
+    error: Optional[str] = None
+
+
+class GithubUserProfile(BaseModel):
+    name: str
+    email: str
+    username: str
+    avatar_url: str | None
+
+
+class GithubUserProfileRequest(BaseModel):
+    username: str
 
 
 # TODO: Add Project budget
