@@ -34,12 +34,14 @@ def create_milestone_prompt(project: MilestonesRequest):
             {
                 "name": "Milestone 1",
                 "description": "This is the description of milestone 1",
-                "duration": "2 weeks"
+                "duration": "2 weeks",
+                "skills_required": ["skill1", "skill2"]
             },
             {
                 "name": "Milestone 2",
                 "description": "This is the description of milestone 2",
-                "duration": "1 week"
+                "duration": "1 week",
+                "skills_required": ["skill1", "skill2"]
             }
         ]
     }
