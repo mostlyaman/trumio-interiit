@@ -7,7 +7,9 @@ import MasterAI from "~/components/chat/Master";
 import { api } from "~/utils/api";
 import Loading from "~/components/Loading";
 import Select from 'react-select';
-import type { Project } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
+
+export type ProjectWithGithubRepos = Prisma.ProjectGetPayload<{ include: { github_repos: true } }>
 
 export default function ChatPage() {
   const [projectChat, setProjectChat] = useState<string>('Master AI');
@@ -15,10 +17,11 @@ export default function ChatPage() {
   const [openProjectChat, setOpenProjectChat] = useState<boolean>(true);
   const [openGroupChat, setOpenGroupChat] = useState<boolean>(false);
 
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectWithGithubRepos | null>(null);
 
 
   const { data: projects, isLoading: isLoadingProjects } = api.project.getMyProjects.useQuery({})
+
 
   return (
     <>
@@ -58,10 +61,10 @@ export default function ChatPage() {
               {
                 isLoadingProjects ? 
                 <div className="flex justify-center mt-3">
-                  <Loading className="stroke-blue-500 w-10 h-10"/>
+                  <Loading className="w-4 h-4"/>
                 </div> :
 
-                (!openProjectChat || !projects || projects.length === 0) ? null :
+                (!openProjectChat || !projects || projects?.length === 0) ? null :
                 <>
                 
                   {/* Projects */}
@@ -70,7 +73,7 @@ export default function ChatPage() {
                         <Select onChange={(option) => { setSelectedProject(option ? option.value: null) }}
                           value={{label: selectedProject?.project_name ?? "Select a project", value: selectedProject}}
                           placeholder={"Select a project"}
-                          options={projects.map((project) => ({ label: project.project_name, value: project }))} 
+                          options={projects?.map((project) => ({ label: project.project_name, value: project }))} 
                         />
                       }
 
