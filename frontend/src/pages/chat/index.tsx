@@ -1,11 +1,13 @@
 import Head from "next/head"
+import React from "react";
 import Breadcrumbs from "~/components/Breadcrumbs"
-import { CaretDownIcon, CaretRightIcon, CaretUpIcon } from '@radix-ui/react-icons'
+import { CaretUpIcon } from '@radix-ui/react-icons'
 import { useState } from "react";
 import MasterAI from "~/components/chat/Master";
 import { api } from "~/utils/api";
 import Loading from "~/components/Loading";
-import { Select } from "@radix-ui/themes";
+import Select from 'react-select';
+import type { Project } from "@prisma/client";
 
 export default function ChatPage() {
   const [projectChat, setProjectChat] = useState<string>('Master AI');
@@ -13,8 +15,10 @@ export default function ChatPage() {
   const [openProjectChat, setOpenProjectChat] = useState<boolean>(true);
   const [openGroupChat, setOpenGroupChat] = useState<boolean>(false);
 
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
-  const { data, isLoading: isLoadingProjects } = api.project.getProjects.useQuery({})
+
+  const { data: projects, isLoading: isLoadingProjects } = api.project.getMyProjects.useQuery({})
 
   return (
     <>
@@ -56,40 +60,46 @@ export default function ChatPage() {
                 <div className="flex justify-center mt-3">
                   <Loading className="stroke-blue-500 w-10 h-10"/>
                 </div> :
-                !openProjectChat ? null :
+
+                (!openProjectChat || !projects || projects.length === 0) ? null :
                 <>
                 
                   {/* Projects */}
                   <div className="px-4 my-2 transition-opacity duration-200 ease-in-out">
-                    <div className="mt-3 px-6 flex font-semibold justify-between items-center flex-row p-2 border border-sky-400 rounded-lg bg-sky-300 bg-opacity-20 text-sky-500">
-                      <div>{isLoadingProjects ? 'Loading...' : 'Project 1'}</div>
-                      <div className="scale-[200%]">
-                          <CaretRightIcon className="text-sky-500" />
-                      </div>
-                    </div>
+                      {
+                        <Select onChange={(option) => { setSelectedProject(option ? option.value: null) }}
+                          value={{label: selectedProject?.project_name ?? "Select a project", value: selectedProject}}
+                          placeholder={"Select a project"}
+                          options={projects.map((project) => ({ label: project.project_name, value: project }))} 
+                        />
+                      }
 
-                    <div className="mx-5 my-2 font-medium flex flex-col">
-                      <button onClick={() => { setProjectChat('Master AI') }}
-                        className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Master AI' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'} `}>
-                        Master AI
-                      </button>
-                      <button onClick={() => { setProjectChat('Updates') }}
-                        className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Updates' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
-                        Updates
-                      </button>
-                      <button onClick={() => { setProjectChat('Resource Sharing') }}
-                        className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Resource Sharing' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
-                        Resource Sharing
-                      </button>
-                      <button onClick={() => { setProjectChat('Discussions') }}
-                        className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Discussions' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
-                        Discussions
-                      </button>
-                      <button onClick={() => { setProjectChat('Payments') }}
-                        className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Payments' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
-                        Payments
-                      </button>
-                    </div>
+
+                    {
+                      selectedProject ?
+                      <div className="mx-5 my-2 font-medium flex flex-col">
+                        <button onClick={() => { setProjectChat('Master AI') }}
+                          className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Master AI' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'} `}>
+                          Master AI
+                        </button>
+                        <button onClick={() => { setProjectChat('Updates') }}
+                          className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Updates' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
+                          Updates
+                        </button>
+                        <button onClick={() => { setProjectChat('Resource Sharing') }}
+                          className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Resource Sharing' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
+                          Resource Sharing
+                        </button>
+                        <button onClick={() => { setProjectChat('Discussions') }}
+                          className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Discussions' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
+                          Discussions
+                        </button>
+                        <button onClick={() => { setProjectChat('Payments') }}
+                          className={`text-left px-3 py-1 border-l-2 ${projectChat === 'Payments' ? 'border-sky-500 text-sky-500' : 'border-gray-300 text-gray-500'}`}>
+                          Payments
+                        </button>
+                      </div> : null
+                    }
                   </div>
                 </>
               }
@@ -108,12 +118,17 @@ export default function ChatPage() {
 
           </div>
           {
-            projectChat === 'Master AI' ? <MasterAI /> :
-            projectChat === 'Updates' ? <div></div> :
-            projectChat === 'Resource Sharing' ? <div></div> :
-            projectChat === 'Discussions' ? <div></div> :
-            projectChat === 'Payments' ? <div></div> :
-            <div className="w-[75%] ml-4 mt-4 bg-white rounded-2xl shadow-xl"></div>
+            selectedProject ? 
+            
+              projectChat === 'Master AI' ? <MasterAI project={selectedProject} /> :
+              projectChat === 'Updates' ? <div></div> :
+              projectChat === 'Resource Sharing' ? <div></div> :
+              projectChat === 'Discussions' ? <div></div> :
+              projectChat === 'Payments' ? <div></div> :
+              <div className="w-[75%] ml-4 mt-4 bg-white rounded-2xl shadow-xl"></div>
+            :
+
+            null
           }
 
           

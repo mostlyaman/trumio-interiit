@@ -17,20 +17,42 @@ enum Role {
 }
 
 model User {
-  id                    String    @id
-  role                  Role      @default(null)
-  phone_number          String    @default("")
-  phone_number_verified Boolean   @default(false)
-  company               Json      @default("{}")
-  education             Json      @default("{}")
-  availability          Json      @default("{}")
-  social                Json      @default("{}")
-  created_at            DateTime  @default(now())
-  updated_at            DateTime  @updatedAt
+  id                    String          @id
+  role                  Role            @default(null)
+  phone_number          String          @default("")
+  phone_number_verified Boolean         @default(false)
+  company               Json            @default("{}")
+  education             Json            @default("{}")
+  availability          Json            @default("{}")
+  social                Json            @default("{}")
+  created_at            DateTime        @default(now())
+  updated_at            DateTime        @updatedAt
   projects              Project[]
+  master_ai_chats       MasterAIChats[]
 
   messaging_password String @default(uuid())
-  bids Bid[]
+  bids               Bid[]
+}
+
+model MasterAIChats {
+  id         String           @id @default(uuid())
+  type       MasterAIChatType
+  project    Project          @relation(fields: [projectId], references: [id])
+  projectId  String
+  user       User?            @relation(fields: [userId], references: [id])
+  userId     String?
+  data       Json
+  created_at DateTime         @default(now())
+  updated_at DateTime         @updatedAt
+}
+
+enum MasterAIChatType {
+  query
+  milestone
+  resource
+  update
+  payment
+  discussion
 }
 
 enum Duration {
@@ -45,37 +67,37 @@ enum ProjectStatus {
 }
 
 model Project {
-id                     String   @id @default(uuid())
-project_name           String
-duration_length        Int
-duration_unit          Duration
-description            String
-technical_requirements Json
-availability           Json
-country                Json
-payment                Json
-nda                    Boolean
+  id                     String          @id @default(uuid())
+  project_name           String
+  duration_length        Int
+  duration_unit          Duration
+  description            String
+  technical_requirements Json
+  availability           Json
+  country                Json
+  payment                Json
+  nda                    Boolean
+  master_ai_chats        MasterAIChats[]
 
-status       ProjectStatus
-team_members User[]
+  status       ProjectStatus
+  team_members User[]
 
-created_at DateTime @default(now())
-updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-milestones          Json @default("{}")
+  milestones Json @default("{}")
 
-bids Bid[]
-
+  bids Bid[]
 }
 
 model Bid {
-  id String @id @default(uuid())
-  user User  @relation(fields: [userId], references: [id])
-  userId String
-  bid_data Json
-  project Project @relation(fields: [projectId], references: [id])
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+  bid_data  Json
+  project   Project @relation(fields: [projectId], references: [id])
   projectId String
 
-created_at DateTime @default(now())
-updated_at DateTime @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

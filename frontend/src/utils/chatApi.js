@@ -18,7 +18,7 @@ function getUniqueId(suffix) {
 }
 
 
-class Api {
+class chatApi {
   constructor(baseUrl) {
     this.baseUrl = baseUrl;
     this.socket = null;
@@ -528,4 +528,4 @@ const api = new Api(process.env.NEXT_PUBLIC_SOCKET_CONNECT);
 api.connect();
 
 export { getUserLogin };
-export default api;
+export default chatApi;

@@ -29,6 +29,20 @@ export const projectRouter = createTRPCRouter({
       return await db.project.findMany();
     }),
 
+  getMyProjects: privateProcedure
+    .input(z.object({}).nullish())
+    .query(async ({ ctx: { userId, db } }) => {
+      return await db.project.findMany({
+        where: {
+          team_members: {
+            some: {
+              id: userId
+            }
+          }
+        }
+      })
+    }),
+
   createBid: privateProcedure
     .input(
       z
@@ -39,11 +53,9 @@ export const projectRouter = createTRPCRouter({
             start_date: z.date(),
           }),
         })
-        .nullish(),
     )
     .mutation(({ ctx: { userId, db }, input }) => {
-      const bidData = input?.bid_data;
-      const userID = input?.userID;
+      const bidData = input.bid_data;
       try {
         console.log(bidData)
         return {}

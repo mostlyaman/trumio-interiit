@@ -6,9 +6,9 @@ const HomeIcon = ()=>{
     viewBox="0 0 24 24"
     fill="none"
     stroke="#0578FB"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
     className="mb-25"
   >
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>

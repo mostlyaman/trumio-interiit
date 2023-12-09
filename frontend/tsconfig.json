@@ -37,7 +37,8 @@
     "**/*.cjs",
     "**/*.mjs",
     ".next/types/**/*.ts", 
-    "**/*.js"
+    "**/*.js", 
+    "src/components/chat/ChatWrapper.jsx"  
   ],
   "exclude": ["node_modules"]
 }
