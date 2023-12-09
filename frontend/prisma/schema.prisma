@@ -88,6 +88,23 @@ model Project {
   milestones Json @default("{}")
 
   bids Bid[]
+
+  github_repos GithubRepos[]
+}
+
+model GithubRepos {
+  id String @id @default(uuid())
+
+  project Project @relation(fields: [projectId], references: [id]) 
+  projectId String
+
+  username String
+  repo String
+  last_fetch DateTime @default(now())
+  description String @default("")
+  commit Json[] @default([])
+  files Json[] @default([])
+  @@unique([projectId, username, repo])
 }
 
 model Bid {
