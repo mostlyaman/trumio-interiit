@@ -55,13 +55,19 @@ export const projectRouter = createTRPCRouter({
           milestones: z.array(MilestoneSchema),
           start_date: z.date(),
         }),
+        projectId:z.string().optional()
       }),
     )
-    .mutation(({ ctx: { userId, db }, input }) => {
-      const bidData = input.bid_data;
+    .mutation(async ({ ctx: { userId, db }, input }) => {
+      const bid_data = input.bid_data;
       try {
-        console.log(bidData);
-        return {};
+        await db.bid.create({
+          data : {
+            bid_data:bid_data,
+            projectId:input.projectId,
+            userId:userId
+          }
+        });
       } catch (error) {
         console.error("Error creating/updating bid:", error);
         throw new Error("Failed to create/update bid");
