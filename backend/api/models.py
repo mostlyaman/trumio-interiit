@@ -50,6 +50,7 @@ class MilestonesRequest(BaseModel):
     tools_required: List[str] | None
     team: List[TeamMember]
 
+
 class Team(BaseModel):
     name: str
     description: str
@@ -118,6 +119,62 @@ class AllCommitsSummary(BaseModel):
 class AllCommitsSummaryRequest(BaseModel):
     owner: str
     repo: str
+
+
+class RepoContent(BaseModel):
+    name: str
+    path: str
+    url: str
+    type: str
+
+
+class RepoContentRequest(BaseModel):
+    owner: str
+    repo: str
+
+
+class RepoContentResponse(BaseModel):
+    repo_content: List[RepoContent]
+
+
+class RepoFile(BaseModel):
+    name: str
+    path: str
+    url: str
+    type: str
+    content: str
+
+
+class RepoFiles(BaseModel):
+    repo_files: List[RepoFile]
+
+
+class RepoFileRequest(BaseModel):
+    owner: str
+    repo: str
+    path: str
+
+
+class RepoFileResponse(BaseModel):
+    repo_file: RepoFile
+
+
+class RepoFilesResponse(BaseModel):
+    repo_files: List[RepoFile]
+
+
+class RepoFileDescription(BaseModel):
+    name: str
+    description: str
+
+
+class RepoFilesDescriptionRequest(BaseModel):
+    repo_files: List[RepoFile]
+
+
+class RepoFilesDescriptionResponse(BaseModel):
+    repo_files_description: List[RepoFileDescription]
+    summary: str
 
 
 # TODO: Add Project budget
