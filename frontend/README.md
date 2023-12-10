@@ -1,28 +1,38 @@
-# Create T3 App
+# Trumio InterIIT Frontend
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This is the frontend of the Trumio InterIIT project. It's built using Next.js and React, with Clerk for authentication.
 
-## What's next? How do I make an app with this?
+## Overview
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+The frontend provides the user interface for the application. The main components are:
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+- Pages: Defined in `src/pages/`, these are the main pages of the application.
+- Components: Defined in `src/components/`, these are the reusable components used across different pages.
+- Styles: The styles are defined using Tailwind CSS in `tailwind.config.ts`.
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+## Environment Variables
 
-## Learn More
+Environment variables are defined in a `.env` file. You need to create this file in the `frontend/` directory with the actual values based on the example provided in the `.env.example` file.
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## Building the Application
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+1. Install Node.js Dependencies:
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+   ```sh
+   npm install
+   ```
+2. Build the application:
 
-## How do I deploy this?
+   ```sh
+   npm run build
+   ```
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+This will create a `.next/` directory with the built application.
+
+## Running the Application
+
+After building the application, you can run it with:
+
+```sh
+npm start
+```
