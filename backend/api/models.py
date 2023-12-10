@@ -17,6 +17,16 @@ class Transcript(BaseModel):
     text: str
 
 
+class MoM(BaseModel):
+    agenda: str
+    key_points: List[str]
+    action_items: List[str]
+
+
+class MoMs(BaseModel):
+    minutes: List[MoM]
+
+
 class TranscriptSummary(BaseModel):
     chapters: List[Chapter]
 
@@ -149,7 +159,6 @@ class Project(BaseModel):
     countries: List[str]
     isIncluding: bool
     nda: bool
-    team: Team
     budget: Budget
     progress: ProjectProgress
     status: ProjectStatus
