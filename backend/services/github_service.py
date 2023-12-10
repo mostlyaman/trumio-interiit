@@ -1,3 +1,4 @@
+from typing import List
 import requests
 from services.file_describe_service import describe_files
 import utils.consts as consts
@@ -78,7 +79,7 @@ class GithubService:
                     ]
                 )
 
-    def get_directory_content(self, directory: dict) -> list[RepoContent]:
+    def get_directory_content(self, directory: dict) -> List[RepoContent]:
         url = directory["url"]
         response = requests.get(url, headers=self.headers)
 

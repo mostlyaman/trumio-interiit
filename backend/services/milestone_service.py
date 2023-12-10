@@ -19,13 +19,33 @@ def create_milestone_prompt(project: MilestonesRequest):
 
     Project Name: {project.project_name} \n
     Project Description: {project.project_description} \n
-    Project Duration: {project.project_duration} \n
-    Project Listing Duration: {project.project_listing_duration} \n
+    Project Duration: {project.project_duration} {project.project_duration_unit} \n
+    Project Cost: {project.project_cost} {project.project_currency} \n
     Skills Required: {project.skills_required} \n
     Tools Required: {project.tools_required} \n
+"""
 
+    prompt += """ \n
+    Availablity: \n
+    """
 
-    Provide a list of milestones with description and duration for the project {project.project_name} in the following format: \n
+    if project.weekdays:
+        prompt += f"Weekdays: {project.weekdayStartHour} - {project.weekdayEndHour} \n"
+
+    if project.weekends:
+        prompt += f"Weekends: {project.weekendStartHour} - {project.weekendEndHour} \n"
+
+    prompt += """ \n
+    Working Days: \n
+    """
+
+    if project.workingWeekdays:
+        prompt += f"Weekdays: {project.workingWeekdays} \n"
+
+    if project.workingWeekends:
+        prompt += f"Weekends: {project.workingWeekends} \n"
+
+    prompt += """Provide a list of milestones with description and duration for the project {project.project_name} in the following format: \n
     """
 
     prompt += """ \n
@@ -33,14 +53,16 @@ def create_milestone_prompt(project: MilestonesRequest):
         "milestones": [
             {
                 "name": "Milestone 1",
+                "cost": "100 <currency>",
                 "description": "This is the description of milestone 1",
-                "duration": "2 weeks",
+                "duration": "2 <unit>",
                 "skills_required": ["skill1", "skill2"]
             },
             {
                 "name": "Milestone 2",
+                "cost": "100 <currency>",
                 "description": "This is the description of milestone 2",
-                "duration": "1 week",
+                "duration": "1 <unit>",
                 "skills_required": ["skill1", "skill2"]
             }
         ]
@@ -57,7 +79,7 @@ async def generate_milestones(Prompt: str):
             messages=[
                 {
                     "role": "system",
-                    "content": "You are professional project manager. You are expert in understanding a project from its context and its requiremen, you can break a project into various milestones with proper description and duration. You can also identify the skills and tools required for a project.",
+                    "content": "You are professional project manager. You are expert in understanding a project from its context and its requiremen, you can break a project into various milestones with proper description and duration and proper breakdown of project cost. You can also identify the skills and tools required for a project. You have given the details of a project, a person is going to work on this project.",
                 },
                 {"role": "user", "content": Prompt},
             ],

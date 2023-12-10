@@ -2,7 +2,7 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from api.models import Project, Transcript
+from api.models import Project
 
 load_dotenv()
 
@@ -17,10 +17,9 @@ else:
 def create_prompt(project: Project):
     prompt = f""" You have given a context of a project as follows: \n
     
-    Project Name: {project.name} \n
+    Project Name: {project.project_name} \n
     Project Description: {project.description} \n
-    Project Duration: {project.expected_duration} \n
-    Project Listing Duration: {project.listing_duration} \n
+    Project Duration: {project.duration} {project.duration_unit} \n
 
     Project Team: \n
     """
@@ -33,23 +32,23 @@ def create_prompt(project: Project):
     """
 
     for milestone in project.milestones:
-        prompt += f"Name: {milestone.name}, Description: {milestone.description}, Duration: {milestone.duration} \n"
+        prompt += f"Name: {milestone.name}, Description: {milestone.description}, Duration: {milestone.duration}, Milestones Deliverables: {milestone.deliverables} \n"
 
     prompt += """ \n
     Project Skills Required: \n
     """
 
-    if project.skills_required:
-        for skill in project.skills_required:
-            prompt += f"{skill}"
+    if project.skills:
+        for skill in project.skills:
+            prompt += f"{skill.name} \n"
         prompt += "\n"
     prompt += """ \n
     Project Tools Required: \n
     """
 
-    if project.tools_required:
-        for tool in project.tools_required:
-            prompt += f"{tool} \n"
+    if project.tools:
+        for tool in project.tools:
+            prompt += f"{tool.name} \n"
 
     prompt += """ \n
     Project Meeting Transcripts: \n
@@ -95,7 +94,7 @@ def create_prompt(project: Project):
     return prompt
 
 
-async def get_chapters_from_transcription(transcription: Transcript, prompt: str):
+async def get_chapters_from_transcription(transcription: str, prompt: str):
     try:
         response = client.chat.completions.create(
             model="gpt-3.5-turbo-16k",

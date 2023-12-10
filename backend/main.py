@@ -1,11 +1,11 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 from api.models import (
     AllCommitsSummaryRequest,
     CommitDiffRequest,
     RepoDataRequest,
     RepoFileRequest,
     RepoFilesDescriptionRequest,
-    TranscriptRequest,
     MilestonesRequest,
     Project,
     CommitRequest,
@@ -39,12 +39,12 @@ def read_root():
 
 
 @app.post("/transcript")
-async def get_transcript_chapters(transcript: TranscriptRequest, project: Project):
+async def get_transcript_chapters(transcript: str, project: Project):
     prompt = create_prompt(project)
 
     print("prompt: ", prompt)
 
-    return await get_chapters_from_transcription(transcript.transcript, prompt)
+    return await get_chapters_from_transcription(transcript, prompt)
 
 
 @app.post("/milestones")
@@ -158,3 +158,35 @@ async def get_repo_data(request: RepoDataRequest):
         return None
 
     return data
+
+
+class GithubEmbeddingsRequest(BaseModel):
+    owner: str
+    repo: str
+    projectId: str
+
+
+# @app.post("/add-github-embeddings")
+# async def add_github_embeddings(request: GithubEmbeddingsRequest):
+#     github_service = GithubService(token)
+
+#     files = github_service.get_repo_files(
+#         RepoContentRequest(owner=request.owner, repo=request.repo)
+#     )
+
+#     if files is None:
+#         return None
+
+#     repo_files = []
+#     for file in files.repo_content:
+#         content = github_service.get_repo_file_content(
+#             RepoFileRequest(owner=request.owner, repo=request.repo, path=file.path)
+#         )
+#         if content:
+#             repo_files.append(content)
+
+#     data = add_repodata_to_github_repo_collection(
+#         request.projectId, RepoFiles(repo_files=repo_files)
+#     )
+
+#     return data

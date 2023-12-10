@@ -8,6 +8,10 @@ class Chapter(BaseModel):
     title: str
     description: str
 
+    @classmethod
+    def toDict(cls, chapter):
+        return {"title": chapter.title, "description": chapter.description}
+
 
 class Transcript(BaseModel):
     text: str
@@ -16,9 +20,21 @@ class Transcript(BaseModel):
 class TranscriptSummary(BaseModel):
     chapters: List[Chapter]
 
+    @classmethod
+    def toDict(cls, transcript_summary):
+        return {
+            "chapters": [
+                Chapter.toDict(chapter) for chapter in transcript_summary.chapters
+            ]
+        }
+
 
 class TranscriptRequest(BaseModel):
-    transcript: Transcript
+    transcript: str
+    project_name: str
+    description: str
+    duration: int
+    duration_unit: str
 
 
 class TranscriptResponse(BaseModel):
@@ -27,8 +43,17 @@ class TranscriptResponse(BaseModel):
 
 
 class TeamMember(BaseModel):
+    id: str
     name: str
     role: str
+
+    @classmethod
+    def toDict(cls, member):
+        return {"name": member.name, "role": member.role}
+
+    @classmethod
+    def toString(cls, member):
+        return f"Member name: {member.name}\nMember role: {member.role}"
 
 
 class MeetingTranscript(BaseModel):
@@ -36,28 +61,47 @@ class MeetingTranscript(BaseModel):
     members: List[TeamMember]
     trancriptSummary: TranscriptSummary
 
+    @classmethod
+    def toString(cls, transcript):
+        return f"Meeting timestamp: {transcript.timestamp}\nMeeting members: {[TeamMember.toString(member) for member in transcript.members]}\nMeeting transcript: {transcript.trancriptSummary}"
+
 
 class Milestone(BaseModel):
     name: str
     description: str
     duration: str
-    skills_required: List[str] | None
+    cost: str
+    deliverables: Optional[List[str]] = None
+    skills_required: Optional[List[str]] = None
 
 
 class MilestonesRequest(BaseModel):
     project_name: str
     project_description: str
-    project_duration: str
-    project_listing_duration: str
-    skills_required: List[str] | None
-    tools_required: List[str] | None
-    team: List[TeamMember]
+    project_duration: int
+    project_duration_unit: str
+    skills_required: List[str] or None
+    tools_required: List[str] or None
+    project_cost: int
+    project_currency: str
+    weekdays: bool
+    weekends: bool
+    weekdayStartHour: int
+    weekdayEndHour: int
+    weekendStartHour: int
+    weekendEndHour: int
+    workingWeekdays: List[str]
+    workingWeekends: List[str]
 
 
 class Team(BaseModel):
     name: str
     description: str
     members: List[TeamMember]
+
+    @classmethod
+    def toString(cls, team):
+        return f"Team name: {team.name}\nTeam description: {team.description}\nTeam members: {[TeamMember.toString(member) for member in team.members]}"
 
 
 class Budget(BaseModel):
@@ -76,19 +120,47 @@ class ProjectProgress(BaseModel):
     total: int
 
 
-class Project(BaseModel):
+class Skill(BaseModel):
+    id: str
     name: str
+
+
+class Tool(BaseModel):
+    id: str
+    name: str
+
+
+class Project(BaseModel):
+    id: str
+    project_name: str
     description: str
-    expected_duration: str
-    listing_duration: str
+    duration: int
+    duration_unit: str
+    timezone: str
+    timeOverlap: int
+    weekdays: bool
+    weekends: bool
+    weekdayStartHour: int
+    weekdayEndHour: int
+    weekendStartHour: int
+    weekendEndHour: int
+    workingWeekdays: List[str]
+    workingWeekends: List[str]
+    countries: List[str]
+    isIncluding: bool
+    nda: bool
     team: Team
     budget: Budget
     progress: ProjectProgress
     status: ProjectStatus
-    meeting_transcripts: List[MeetingTranscript] | None
+    meeting_transcripts: List[MeetingTranscript] or None
     milestones: List[Milestone]
-    skills_required: List[str] | None
-    tools_required: List[str] | None
+    skills: List[Skill] or None
+    tools: List[Tool] or None
+
+    @classmethod
+    def toStr(cls, project):
+        return f"Project name: {project.name}\nProject description: {project.description}\nProject budget: {project.budget.amount} {project.budget.currency}\nProject expected duration: {project.expected_duration}\nProject listing duration: {project.listing_duration}\nProject team: {[team.toString(project.team) for team in project.team]}\nProject milestones: {[milestone.toString(project.milestones) for milestone in project.milestones]}"
 
 
 class ProjectRequest(BaseModel):
@@ -99,7 +171,7 @@ class GithubUser(BaseModel):
     name: str
     email: str
     username: str
-    avatar_url: str | None
+    avatar_url: str or None
 
 
 class Commit(BaseModel):
@@ -141,7 +213,7 @@ class CommitDiffResponse(BaseModel):
 class CommitSummary(BaseModel):
     commit: Commit
     commit_diff: CommitDiff
-    summary: list[str]
+    summary: List[str]
 
 
 class AllCommitsSummary(BaseModel):
@@ -239,7 +311,7 @@ class RepoDataRequest(BaseModel):
 
 
 class RepoDataResponse(BaseModel):
-    repo_data: RepoData | None
+    repo_data: Optional[RepoData] = None
     error: Optional[str] = None
 
 
@@ -247,7 +319,7 @@ class GithubUserProfile(BaseModel):
     name: str
     email: str
     username: str
-    avatar_url: str | None
+    avatar_url: str or None
 
 
 class GithubUserProfileRequest(BaseModel):

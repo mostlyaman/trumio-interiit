@@ -29,7 +29,7 @@ services:
     container_name: nextjs
     depends_on:
       - db
-      - python
+      
     ports: 
       - "3000:3000"
     # environment:
@@ -39,8 +39,14 @@ services:
   python:
     build: ./backend
     container_name: python
+    depends_on:
+      - chroma
+      - nextjs
     volumes:
       - ./backend:/app
+    environment:
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
     
   chroma:
     image: ghcr.io/chroma-core/chroma:latest
