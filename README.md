@@ -27,6 +27,9 @@ The frontend is located in the `frontend/` directory. It uses Next.js and React 
 ## Docker
 
 The application can be run in Docker using the provided [`docker-compose.yaml`](docker-compose.yaml) file.
+```
+docker-compose up
+```
 
 ## Environment Variables
 
