@@ -28,16 +28,27 @@ enum MarketPlaceEnum {
 
 export default function Home() {
   const { data, isLoading } = api.project.getProjects.useQuery();
+  console.log({"proj":data})
 
   const [selectedStatus, setSelectedStatus] = useState<MarketPlaceEnum>(
     MarketPlaceEnum.ALLLISTINGS,
   );
 
   const [modal, setModal] = useState(false);
+  const [bid, setBid] = useState(false);
+  const [currentProj,setCurrentProj] = useState<Project | undefined>()
 
   const handleClick = (val: MarketPlaceEnum) => {
     setSelectedStatus(val);
   };
+  let len = 0;
+  const { data: bid_proj } = api.user.getUser.useQuery();
+  data?.forEach(value => {
+    const found = bid_proj?.bids.find((item) => {
+      if (item.projectId === value.id) return true;
+    });
+    if(found) len++;
+  })
 
   return (
     <>
@@ -47,7 +58,12 @@ export default function Home() {
         <div className="flex w-[100%] flex-col gap-5 p-5">
           <div className="flex flex-row justify-between">
             <Breadcrumbs paths={["MarketPlace", selectedStatus]} />
-            <Link className="bg-sky-600 text-white px-3 py-2 rounded-lg" href={"/create-project"}>Create Project</Link>
+            <Link
+              className="rounded-lg bg-sky-600 px-3 py-2 text-white"
+              href={"/create-project"}
+            >
+              Create Project
+            </Link>
           </div>
           <div className="flex flex-wrap gap-5 ">
             <div
@@ -60,7 +76,7 @@ export default function Home() {
             >
               <div className="flex flex-col gap-1 py-1 pl-2">
                 <span className=" text-2xl font-semibold text-slate-600">
-                  16
+                  {data?.length}
                 </span>
                 <span className=" text-sm text-slate-400">All Listings</span>
               </div>
@@ -84,7 +100,7 @@ export default function Home() {
             >
               <div className="flex flex-col gap-1 py-1 pl-2">
                 <span className=" text-2xl font-semibold text-slate-600">
-                  0
+                  {len}
                 </span>
                 <span className=" text-sm text-slate-400">My Bid</span>
               </div>
@@ -179,24 +195,63 @@ export default function Home() {
           </div>
           <div className="flex cursor-pointer flex-col justify-center gap-5">
             {isLoading ? (
-              <div className="w-[100%] justify-center items-center flex h-[50vh]"><Loading className="" /></div>
-            ) : (
+              <div className="flex h-[50vh] w-[100%] items-center justify-center">
+                <Loading className="" />
+              </div>
+            ) : selectedStatus === MarketPlaceEnum.ALLLISTINGS ? (
               data?.map((value) => {
+                console.log({"dd":value})
                 return (
                   <>
                     {modal ? (
                       <DialogDemo
-                        proj={value}
+                        proj={currentProj}
                         modal={modal}
                         setModal={setModal}
+                        bid={bid}
+                        setBidUser={setBid}
+                        setCurrentProj = {setCurrentProj}
                       />
                     ) : (
                       <span>
-                        <ProjectComp proj={value} setModal={setModal} />
+                        <ProjectComp proj={value} setModal={setModal} setCurrentProj = {setCurrentProj} />
                       </span>
                     )}
                   </>
                 );
+              })
+            ) : (
+              data?.map((value) => {
+                const found = bid_proj?.bids.find((item) => {
+                  if (item.projectId === value.id) return true;
+                });
+                console.log(found);
+                if (found) {
+                  return (
+                    <>
+                      {modal ? (
+                        <DialogDemo
+                          proj={currentProj}
+                          modal={modal}
+                          setModal={setModal}
+                          bid={bid}
+                          setBidUser={setBid}
+                          setCurrentProj = {setCurrentProj}
+                        />
+                      ) : (
+                        <span>
+                          <MyBidComp
+                            proj={value}
+                            setModal={setModal}
+                            setCurrentProj = {setCurrentProj}
+                            bid={bid}
+                            setBid={setBid}
+                          />
+                        </span>
+                      )}
+                    </>
+                  );
+                }
               })
             )}
           </div>
@@ -329,15 +384,24 @@ const DialogDemo = ({
   modal,
   setModal,
   proj,
+  setBidUser,
+  setCurrentProj,
+  bid,
 }: {
   modal: boolean;
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  proj: Project;
+  proj: Project | undefined;
+  bid: boolean;
+  setBidUser: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>;
 }) => {
-  const { setProject } = useProjectStore();
+  
+  const { setProject,resetProject } = useProjectStore();
   const { setBid } = useBidStore();
   const HandleClick = () => {
+    resetProject()
     setProject(proj);
+    setCurrentProj(undefined)
     setBid({
       bid_data: {
         start_date: new Date(),
@@ -346,28 +410,28 @@ const DialogDemo = ({
             name: "MileStone 1",
             description: "",
             duration: 0,
-            cost: 0, 
-            deliverables: "Deliverable 1" 
-          }
-        ]
-      }
+            cost: 0,
+            deliverables: "Deliverable 1",
+          },
+        ],
+      },
     });
   };
   return (
     <Dialog.Root open={modal}>
       {
         <Dialog.Portal>
-          <Dialog.Overlay className="bg-blackA6 data-[state=open]:animate-overlayShow fixed inset-0" />
+          <Dialog.Overlay className="bg-blackA6 data-[state=open]:animate-overlayShow fixed inset-0 " />
 
           <Dialog.Content
-            className={`${mont.className} data-[state=open]:animate-contentShow fixed left-[50%] top-[50%] h-[85vh] w-[90vw] max-w-[900px] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none`}
+            className={`${mont.className} data-[state=open]:animate-contentShow flex fixed left-[50%] top-[50%] w-[90vw] min-w-[max-content] translate-x-[-50%] translate-y-[-50%] rounded-[6px] bg-white p-[25px] shadow-[hsl(206_22%_7%_/_35%)_0px_10px_38px_-10px,_hsl(206_22%_7%_/_20%)_0px_10px_20px_-15px] focus:outline-none`}
           >
-            <div className="scrollbar mr-5" id="style-1">
-              <div className="force-overflow max-h-[150px] bg-[#F5F5F5]">
+            <div className="scrollbar flex flex-grow mt-5 bg-white h-[max-content]" id="style-1">
+              <div className="force-overflow flex-grow pr-10 pl-10 rounded-lg  ">
                 <div
-                  className={` ${mont.className} flex flex-col gap-5 bg-[#FFFFFF] shadow-lg`}
+                  className={` ${mont.className} flex flex-col  bg-white shadow-lg rounded-lg`}
                 >
-                  <div className="rounded-lg bg-white pb-4 shadow-md">
+                  <div className=" bg-white pb-4 shadow-md rounded-t-lg">
                     <div className="border-b border-slate-200 pb-2 pl-3 pt-3 text-2xl">
                       Project Details
                     </div>
@@ -375,7 +439,7 @@ const DialogDemo = ({
                       <div className=" mt-2 flex flex-col gap-3 p-4">
                         <div className="flex max-w-[280px] flex-col">
                           <span className="text-sm font-semibold">
-                            {proj.project_name}
+                            {proj?.project_name}
                           </span>
                           <span>Project Name</span>
                         </div>
@@ -388,7 +452,7 @@ const DialogDemo = ({
                       <div className=" mt-2 flex flex-col gap-3 p-4">
                         <div className="flex flex-col">
                           <span className="text-sm font-semibold">
-                            {proj.duration_length} {proj.duration_unit}
+                            {proj?.duration} {proj?.duration_unit}
                           </span>
                           <span>Duration</span>
                         </div>
@@ -397,7 +461,7 @@ const DialogDemo = ({
                           <span>Payment Type</span>
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold">6 hr</span>
+                          <span className="font-semibold">{proj?.timeOverlap?proj?.timeOverlap:"4"} hr</span>
                           <span>Minimum Overlap</span>
                         </div>
                       </div>
@@ -411,58 +475,84 @@ const DialogDemo = ({
                         </div>
                         <div className="flex flex-col">
                           <span className="font-semibold">
-                            {proj.nda ? "Yes" : "No"}
+                            {proj?.nda ? "Yes" : "No"}
                           </span>
                           <span>NDA</span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-lg bg-white pb-4 shadow-md">
+                  <div className=" bg-white pb-4 shadow-md">
                     <div className="border-b border-slate-200 pb-2 pl-3 pt-3 text-2xl">
                       Project Description
                     </div>
                     <div className="p-4 text-sm text-gray-500">
-                      {proj.description}
+                      {proj?.description}
                     </div>
                   </div>
-                  <div className="rounded-lg bg-white pb-4 shadow-md">
+                  <div className="rounded-b-lg bg-white pb-4 shadow-md">
                     <div className="border-b border-slate-200 pb-2 pl-3 pt-3 text-2xl">
                       Requirement Details
                     </div>
-                    <div className="flex justify-between text-lg ">
+                    <div className="flex justify-between text-lg bg-white ">
                       <div className=" mt-2 flex flex-col gap-3 p-4">
                         <div className="flex flex-col">
-                          <span className="text-lg ">Skills</span>
-                          <div className="flex max-w-[150px] flex-wrap gap-2">
-                            {/* {proj.skills?.map((val, index) => (
-                          <span key={index} className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-sm font-medium text-[#2196F3]">
-                            {val}
-                          </span>
-                        ))} */}
+                          <div className="flex max-w-[500px] flex-wrap gap-2">
+                            {proj?.skills?.length ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-lg">Skills</span>
+                                <div className="flex max-w-[100% flex-wrap gap-2">
+                                  {proj
+                                    ? proj?.skills?.map((val, index) => (
+                                        <span
+                                          key={index}
+                                          className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-xs font-medium text-[#2196F3]"
+                                        >
+                                          {val?.name}
+                                        </span>
+                                      ))
+                                    : ""}
+                                </div>
+                              </div>
+                            ) : (
+                              ""
+                            )}
                           </div>
                         </div>
                         <div className="flex flex-col">
-                          <span className="text-lg ">Tools</span>
-                          <div className="flex max-w-[150px] flex-wrap gap-2">
-                            {/* {proj.tools?.map((val, index) => (
-                          <span key={index} className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-sm font-medium text-[#2196F3]">
-                            {val}
-                          </span>
-                        ))} */}
+                          <div className="flex max-w-[500px] flex-wrap gap-2">
+                            {proj?.tools?.length ? (
+                              <div className="flex flex-col gap-1">
+                                <span className="text-lg">Tools</span>
+                                <div className="flex flex-wrap gap-2">
+                                  {proj?.tools?.map((val, index) => (
+                                    <span
+                                      key={index}
+                                      className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px] px-2 text-xs font-medium text-[#2196F3]"
+                                    >
+                                      {val?.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              ""
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <Link
-                      onClick={HandleClick}
-                      href="/create-bid"
-                      className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400"
-                    >
-                      Create Bid <RightIcon />
-                    </Link>
+                    {!bid && (
+                      <Link
+                        onClick={HandleClick}
+                        href="/create-bid"
+                        className="mr-5 mt-5 flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400"
+                      >
+                        Create Bid <RightIcon />
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
@@ -471,7 +561,10 @@ const DialogDemo = ({
               <button
                 className="text-violet11 hover:bg-violet4 focus:shadow-violet7 absolute right-[10px] top-[10px] inline-flex h-[25px] w-[25px] appearance-none items-center justify-center rounded-full focus:shadow-[0_0_0_2px] focus:outline-none"
                 aria-label="Close"
-                onClick={() => setModal(false)}
+                onClick={() => {
+                  setModal(false);
+                  setBidUser(false);
+                }}
               >
                 <Cross2Icon />
               </button>
@@ -492,27 +585,6 @@ function getTimeDifference(date: string): string {
 
   return `${hoursDifference} hours ago`;
 }
-
-// enum ProjectStatus {
-//   open_listing = "Open Listing",
-//   in_review = "In Review",
-//   in_development = "In Development",
-// }
-
-// interface MyObj {
-//   id: string;
-//   project_name: string;
-//   duration_length: number;
-//   duration_unit: Duration;
-//   description: string;
-//   technical_requirements: JSON;
-//   availability: JSON;
-//   country: JSON;
-//   payment: JSON;
-//   nda: boolean;
-//   status: ProjectStatus;
-//   created_at: string;
-// }
 
 const TruncatedDescription = ({ description }: { description: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -549,35 +621,43 @@ const TruncatedDescription = ({ description }: { description: string }) => {
 const ProjectComp = ({
   proj,
   setModal,
+  setCurrentProj
 }: {
-  proj: Project;
+  proj: Project | undefined;
   setModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>;
 }) => {
-  // const proj = {
-  //   name: "asdas",
-  //   location: "India",
-  //   skills: ["ML", "Web dev"],
-  //   tools: ["AWS Services"],
-  //   stars: 0,
-  //   project_count: 0,
-  //   Person: "Luv",
-  //   title: "Enigma",
-  //   desc: "orem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum",
-  // };
   const HandleClick = () => {
     setModal(true);
+    setCurrentProj(proj)
   };
+  const { data } = api.project.getMyProjects.useQuery();
+  let user;
+  const project = data?.projects?.find(
+    (proje) => proje.projectid === proj?.projectid,
+  );
+  if (project) {
+    const clientTeamMember = project.team_members.find(
+      (member) => member.role === "client",
+    );
+    console.log(clientTeamMember?.id);
+    if (clientTeamMember) {
+      user = data?.users.get(clientTeamMember?.id);
+    }
+  }
   return (
     <>
       <div
+        onClick={HandleClick}
         className={`${mont.className} flex h-[max-content]   flex-col justify-between gap-5 rounded-lg bg-white p-5 shadow-md`}
       >
-        <div
-          onClick={HandleClick}
-          className="flex items-center justify-between"
-        >
-          <span className=" rounded-md bg-green-100 p-[2px] px-2 text-sm font-medium text-green-600">
-            {proj.status}
+        <div className="flex items-center justify-between">
+          <span className=" t mx-3 rounded-md bg-green-100 p-[2px] px-2 text-sm font-medium text-green-600">
+            {proj?.status === "open_listing"
+              ? "Open Listing"
+              : proj?.status === "in_development"
+                ? "In Development"
+                : "In Review"}
           </span>
           <span className=" cursor-pointer ">
             <HeartIcon />
@@ -586,7 +666,7 @@ const ProjectComp = ({
         <div className="flex justify-between px-[1rem]  ">
           <div className="flex w-[65%] flex-col gap-5">
             <span onClick={HandleClick} className="text-lg">
-              {proj.project_name}
+              {proj?.project_name}
             </span>
             <div className="mr-3 mt-3 flex flex-col gap-3 text-sm">
               <div onClick={HandleClick} className="flex gap-5">
@@ -602,11 +682,11 @@ const ProjectComp = ({
                   <span>No Country</span>
                 </span>
                 <span className="text-md">
-                  {getTimeDifference(proj.created_at.toDateString())}
+                  {getTimeDifference(proj?.created_at.toDateString())}
                 </span>
               </div>
               <div>
-                <TruncatedDescription description={proj.description} />
+                <TruncatedDescription description={proj?.description} />
               </div>
             </div>
           </div>
@@ -617,39 +697,201 @@ const ProjectComp = ({
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
                 <span>
-                  <Avatar radius="full" fallback="A" size="3" />
+                  <Avatar
+                    radius="full"
+                    fallback="A"
+                    size="3"
+                    src={`${user?.imageUrl}`}
+                  />
                 </span>
                 <div className="flex flex-col">
-                  <span>No Person</span>
-                  <span className="text-xs">No title</span>
+                  <span>{`${user?.firstName} ${user?.lastName}`}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-sm">Skills</span>
-                <div className="flex max-w-[150px] flex-wrap gap-2">
-                  {/* {proj.technical_requirements?.map((val, index) => (
-                    <span
-                      key={index}
-                      className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-xs font-medium text-[#2196F3]"
-                    >
-                      {val}
-                    </span>
-                  ))} */}
+              {proj?.skills?.length ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm">Skills</span>
+                  <div className="flex max-w-[150px] flex-wrap gap-2">
+                    {proj
+                      ? proj?.skills?.map((val, index) => (
+                          <span
+                            key={index}
+                            className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-xs font-medium text-[#2196F3]"
+                          >
+                            {val.name}
+                          </span>
+                        ))
+                      : ""}
+                  </div>
+                </div>
+              ) : (
+                ""
+              )}
+              {proj?.tools?.length ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm">Tools</span>
+                  <div className="flex max-w-[150px] flex-wrap gap-2">
+                    {proj?.tools?.map((val, index) => (
+                      <span
+                        key={index}
+                        className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px] px-2 text-xs font-medium text-[#2196F3]"
+                      >
+                        {val.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                ""
+              )}
+            </div>
+            <div className="flex items-center gap-3 pt-2 text-sm">
+              <span className="flex items-center gap-1 rounded-md bg-[#FFEDE0] px-2 py-[2px] text-sm">
+                <span className="text-[#FF9F43]">
+                  <StarIcon />
+                </span>
+                <span>5</span>
+              </span>
+              <span className="text-sm">0 Projects</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+const MyBidComp = ({
+  proj,
+  setModal,
+  setBid,
+  bid,
+  setCurrentProj
+}: {
+  proj: Project;
+  bid: boolean;
+  setModal: React.Dispatch<React.SetStateAction<boolean>>;
+  setBid: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>;
+}) => {
+  const HandleClick = () => {
+    setModal(true);
+    setBid(true);
+  };
+  const { data } = api.project.getMyProjects.useQuery();
+  let user;
+  const project = data?.projects?.find(
+    (proje) => proje.projectid === proj?.projectid,
+  );
+
+  if (project) {
+    const clientTeamMember = project.team_members.find(
+      (member) => member.role === "null",
+    );
+    console.log(clientTeamMember?.id);
+    if (clientTeamMember) {
+      user = data?.users.get(clientTeamMember?.id);
+    }
+  }
+
+  return (
+    <>
+      <div
+        onClick={HandleClick}
+        className={`${mont.className} flex h-[max-content]   flex-col justify-between gap-5 rounded-lg bg-white p-5 shadow-md`}
+      >
+        <div className="flex items-center justify-between">
+          <span className=" t mx-3 rounded-md bg-green-100 p-[2px] px-2 text-sm font-medium text-green-600">
+            {proj?.status === "open_listing"
+              ? "Open Listing"
+              : proj?.status === "in_development"
+                ? "In Development"
+                : "In Review"}
+          </span>
+          <span className=" cursor-pointer ">
+            <HeartIcon />
+          </span>
+        </div>
+        <div className="flex justify-between px-[1rem]  ">
+          <div className="flex w-[65%] flex-col gap-5">
+            <span onClick={HandleClick} className="text-lg">
+              {proj?.project_name}
+            </span>
+            <div className="mr-3 mt-3 flex flex-col gap-3 text-sm">
+              <div onClick={HandleClick} className="flex gap-5">
+                <span className="text-md">Variable Price</span>
+                <span className="text-md flex items-center gap-1">
+                  <Image
+                    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAHUSURBVHgBjVPLbcJAFLTN9+gSTAWBDqADqAB8QAhxQFSAqYDkgBBwcKgAOoBUEHeAS/ANxDczzj60GEhY6ek9v52dnZ1dm8aDMR6PnXQ63T2fz1V8OuyZphkgBafTadBut8PkGjPZmE6n3cvl8o4yQg4QX4roDUFiw7Isr9lsDp4SzWazPlR4WPyRy+U813WjpFIkD0T1JJmpgRqY9EFE6Z7xxwCWZH2UtVartbwhmkwmG2ZMFKTn+7693W4b6mhL3RtYsIJyR/CW2qGM5FCNAEejUXG/329SqdSQAQXf7Mk8TJ9zjVr7SwTmGJDP55cCxK35SBHICwzWmUxmKPOCxQbFKxFk28wJc4sgmPM4DNbYsCyTgkXf1hVF4okAQb7m7fCmGKzRDnT/lKJIVxQDdrtdVYCHw6GHZAO4YbA+Ho+uzAsWioIrEaSvkUKYWhdgp9MJACrB1B4jm80W2JN5hQ3V2vt3ZGhv49nQ3pwLos8bIg71Nmhy6dH/pEjo14q1/uYsHYQjuEr2QjdeBntCgs0q+twNkbrmGlXB7JVOxpo9lA5MryUV3/39ugcoQ9lZKXF0X/4l4uDvgNe9UJ+xMiip6Df3EpFSFhuLo4YI99kFcPwAwawiRF+qxvsAAAAASUVORK5CYII="
+                    alt="Mpin"
+                    height="22"
+                    width="22"
+                    className="mpin h-[17px] w-[17px]"
+                  ></Image>
+                  <span>No Country</span>
+                </span>
+                <span className="text-md">
+                  {getTimeDifference(proj?.created_at.toDateString())}
+                </span>
+              </div>
+              <div>
+                <TruncatedDescription description={proj?.description} />
+              </div>
+            </div>
+          </div>
+          <div
+            onClick={HandleClick}
+            className="flex flex-grow items-start gap-[3rem]"
+          >
+            <div className="flex flex-col gap-5">
+              <div className="flex items-center gap-2">
+                <span>
+                  <Avatar
+                    radius="full"
+                    fallback="A"
+                    size="3"
+                    src={`${user?.imageUrl}`}
+                  />
+                </span>
+                <div className="flex flex-col">
+                  <span>{`${user?.firstName} ${user?.lastName}`}</span>
                 </div>
               </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-sm">Tools</span>
-                <div className="flex max-w-[150px] flex-wrap gap-2">
-                  {/* {proj.tools?.map((val, index) => (
-                    <span
-                      key={index}
-                      className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px] px-2 text-xs font-medium text-[#2196F3]"
-                    >
-                      {val}
-                    </span>
-                  ))} */}
+              {proj?.skills?.length ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm">Skills</span>
+                  <div className="flex max-w-[150px] flex-wrap gap-2">
+                    {proj
+                      ? proj?.skills?.map((val, index) => (
+                          <span
+                            key={index}
+                            className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px]  px-2 text-xs font-medium text-[#2196F3]"
+                          >
+                            {val.name}
+                          </span>
+                        ))
+                      : ""}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                ""
+              )}
+              {proj?.tools?.length ? (
+                <div className="flex flex-col gap-1">
+                  <span className="text-sm">Tools</span>
+                  <div className="flex max-w-[150px] flex-wrap gap-2">
+                    {proj?.tools?.map((val, index) => (
+                      <span
+                        key={index}
+                        className="w-[max-content] rounded-md bg-[#E3F2FD] p-[2px] px-2 text-xs font-medium text-[#2196F3]"
+                      >
+                        {val.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                ""
+              )}
             </div>
             <div className="flex items-center gap-3 pt-2 text-sm">
               <span className="flex items-center gap-1 rounded-md bg-[#FFEDE0] px-2 py-[2px] text-sm">

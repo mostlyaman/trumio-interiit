@@ -24,13 +24,15 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
   const { data, isLoading } = api.user.getUser.useQuery({}, { enabled: !user && isSignedIn })
   React.useEffect(() => {
+    console.log(data?.role)
+    if(data?.role === "null") router.push('/auth')
     if(data && !user) {
       setUser(data)
     }
-  })
+  },[data,user])
 
   React.useEffect(() => {
-    if(router.pathname !== '/create-bid') {
+    if(router.pathname !== '/create-bid' && router.pathname !== '/bid') {
       resetBid()
       resetProject()
     }
@@ -38,8 +40,8 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <>
-      <Navbar />
-      <div className={"min-h-[100vh] pt-[7vh] bg-gray-100 overflow-scroll" + mont.className}>
+      {router.pathname === '/auth'?"":<Navbar />}
+      <div className={`min-h-[100vh] ${router.pathname === '/auth'?"":"pt-[7vh]"} bg-gray-100 overflow-scroll" + mont.className`}>
         {children}
       </div> 
       {/* {

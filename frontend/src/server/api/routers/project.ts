@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import type { User } from "@clerk/nextjs/server";
 
 import {
   createTRPCRouter,
   privateProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
+import { clerkClient } from "@clerk/nextjs/server";
 
 const MilestoneSchema = z.object({
   name: z.string().optional(),
@@ -33,7 +35,7 @@ export const projectRouter = createTRPCRouter({
   getMyProjects: privateProcedure
     .input(z.object({}).nullish())
     .query(async ({ ctx: { userId, db } }) => {
-      return await db.project.findMany({
+      const projects = await db.project.findMany({
         where: {
           team_members: {
             some: {
@@ -42,9 +44,28 @@ export const projectRouter = createTRPCRouter({
           },
         },
         include: {
-          github_repos: true
+          github_repos: true,
+          team_members: {
+            select: {
+              id: true,
+              role: true
+            }
+          }
         }
       });
+
+      const users = new Map<string, User>()
+
+      await Promise.all(projects.map(async (project) => {
+        await Promise.all(project.team_members.map(async (user) => {
+          if(!users.get(user.id)) {
+            users.set(user.id, await clerkClient.users.getUser(user.id))
+          }
+        }))
+      }))
+
+      return {projects, users}
+      
     }),
 
   createBid: privateProcedure
@@ -165,5 +186,50 @@ export const projectRouter = createTRPCRouter({
           }
         })
         return project
+      }),
+
+    getBids: privateProcedure
+      .input(z.object({projectId: z.string() }))
+      .query(async ({ctx: { db, userId }, input}) => {
+        const project = await db.project.findUnique({
+          where: {
+            id: input.projectId,
+          },
+          include: {
+            bids: {
+              select: {
+                userId: true
+              }
+            }
+          }
+        })
+        if(!project) {
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'No such project exists.'})
+        }
+        const users = new Map<string, User>()
+        await Promise.all(project.bids.map(async bid => {
+          if(!users.get(bid.userId)) {
+            users.set(userId, await clerkClient.users.getUser(bid.userId))
+          }
+        }))
+
+        return { users, bids: project.bids, project }
+      }),
+    
+    accept_bid: privateProcedure
+      .input(z.object({ projectId: z.string(), bidUserId: z.string()  }))
+      .mutation(async ({ctx: {db, userId}, input}) => {
+        await db.project.update({
+          where: {
+            id: input.projectId
+          },
+          data: {
+            team_members: {
+              connect: {
+                id: input.bidUserId
+              }
+            }
+          }
+        })
       })
 });

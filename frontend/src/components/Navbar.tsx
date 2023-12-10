@@ -50,11 +50,11 @@ export default function Navbar() {
             {
               user.isSignedIn ?
               <>
-                <div className="flex flex-col items-end">
+                <Link href={"/profile"} className="flex flex-col items-end">
                   <span className="text-md">{ (user.user.fullName ?? user.user.emailAddresses[0]?.emailAddress) }</span>
                   <span className="text-xs">Client</span>
-                </div>
-                <Avatar src={user.user.imageUrl} radius="full" fallback="A" size="2" />
+                </Link>
+                <Link href={"/profile"} className="cursor-pointer"><Avatar src={user.user.imageUrl} radius="full" fallback="A" size="2" /></Link>
               </> :
               <SignInButton>
                 <button className="bg-sky-500 p-4 py-2 rounded hover:bg-sky-600 transition font-semibold text-white">Sign In</button>
