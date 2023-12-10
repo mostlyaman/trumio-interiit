@@ -55,31 +55,43 @@ enum MasterAIChatType {
   discussion
 }
 
-enum Duration {
-  weeks
-  days
-}
-
 enum ProjectStatus {
   open_listing
   in_review
   in_development
 }
 
+
 model Project {
   id                     String          @id @default(uuid())
   project_name           String
-  duration_length        Int
-  duration_unit          Duration
+  duration        Int
+  duration_unit          String
   description            String
-  technical_requirements Json
-  availability           Json
-  country                Json
-  payment                Json
-  nda                    Boolean
+  
+  technical_requirements Json @default("{}")
+  
+  timezone           String
+  timeOverlap Int
+  weekdays Boolean
+  weekends Boolean
+  weekdayStartHour Int
+  weekdayEndHour Int
+  weekendStartHour Int
+  weekendEndHour Int
+  workingWeekdays Json
+  workingWeekends Json
+  
+  skills Json
+  tools Json
+  
+  countries String[]
+  isIncluding Boolean
+
+  nda                    Boolean @default(false)
   master_ai_chats        MasterAIChats[]
 
-  status       ProjectStatus
+  status       ProjectStatus @default(open_listing)
   team_members User[]
 
   created_at DateTime @default(now())

@@ -39,7 +39,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <>
       <Navbar />
-      <div className={"min-h-[100vh] pt-[7vh] bg-gray-100 " + mont.className}>
+      <div className={"min-h-[100vh] pt-[7vh] bg-gray-100 overflow-scroll" + mont.className}>
         {children}
       </div> 
       {/* {

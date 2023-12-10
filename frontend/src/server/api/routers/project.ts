@@ -55,7 +55,7 @@ export const projectRouter = createTRPCRouter({
           milestones: z.array(MilestoneSchema),
           start_date: z.date(),
         }),
-        projectId:z.string().optional()
+        projectId:z.string()
       }),
     )
     .mutation(async ({ ctx: { userId, db }, input }) => {
@@ -114,4 +114,56 @@ export const projectRouter = createTRPCRouter({
       }
       
     }),
+    createProject: privateProcedure
+      .input(z.object({
+        project_name: z.string(),
+        duration: z.number(),
+        duration_unit: z.string(),
+        description: z.string(),
+        timezone: z.string(),
+        timeOverlap: z.number(),
+        weekdays: z.boolean(),
+        weekends: z.boolean(),
+        weekdayStartHour: z.number(),
+        weekdayEndHour: z.number(),
+        weekendStartHour: z.number(),
+        weekendEndHour: z.number(),
+        workingWeekdays: z.object({
+          mon: z.boolean(),
+          tue: z.boolean(),
+          wed: z.boolean(),
+          thu: z.boolean(),
+          fri: z.boolean(),
+        }),
+        workingWeekends: z.object({
+          sat: z.boolean(),
+          sun: z.boolean()
+        }),
+        skills: z.array(
+          z.object({
+            _id: z.string(),
+            name: z.string()
+          })
+        ),
+        tools: z.array(
+          z.object({
+            _id: z.string(),
+            name: z.string()
+          })
+        ),
+        countries: z.array(z.string()),
+        isIncluding: z.boolean(),
+        nda: z.boolean(),
+      }))
+      .mutation(async ({ ctx: { db, userId }, input }) => {
+        const project = await db.project.create({
+          data: {
+            ...input,
+            team_members: {
+              connect: [ { id: userId } ]
+            }
+          }
+        })
+        return project
+      })
 });

@@ -14,7 +14,7 @@ export default function Navbar() {
   console.log(router.pathname)
   return (
     <>
-      <div className={`${mont.className} flex h-[7vh] items-center justify-between px-5 text-gray-600 shadow-md fixed w-[100%] bg-white`}>
+      <div className={`${mont.className} z-[1000] flex h-[7vh] items-center justify-between px-5 text-gray-600 shadow-md fixed w-[100%] bg-white`}>
         <div className="flex gap-5">
           <div className="flex items-center">
             <span>
@@ -22,7 +22,7 @@ export default function Navbar() {
             </span>
             <span className="pt-1 text-xs">v0.0.8</span>
           </div>
-          <div className="flex items-center">
+          <div className="hidden md:flex items-center">
             <ul className="flex gap-[2rem] text-sm">
               <Link href="/dashboard" className={ "hover:text-[#008EBA] hover:border-b-2 hover:border-[#008EBA] cursor-pointer h-[7vh] flex items-center transition-all duration-100 hover:font-semibold box-border " + (router.pathname === '/dashboard' ? ' text-[#008EBA] border-b-2 border-[#008EBA]' : '')}>Dashboard</Link>
               <Link href="/marketplace" className={ "hover:text-[#008EBA] hover:border-b-2 hover:border-[#008EBA] cursor-pointer h-[7vh] flex items-center transition-all duration-100 hover:font-semibold box-border " + (router.pathname === '/marketplace' ? ' text-[#008EBA] border-b-2 border-[#008EBA]' : '')}>Marketplace</Link>

@@ -11,11 +11,11 @@ import Image from "next/image";
 import { Montserrat } from "next/font/google";
 import { api } from "~/utils/api";
 import Loading from "~/components/Loading";
-import { Duration } from "@prisma/client";
 import Link from "next/link";
 import type { Project } from "@prisma/client";
 import { useProjectStore } from "../../store/ProjectStore";
 import { useBidStore } from "~/store/BidStore";
+import Breadcrumbs from "~/components/Breadcrumbs";
 
 const mont = Montserrat({ subsets: ["latin"] });
 
@@ -45,6 +45,10 @@ export default function Home() {
         className={` ${mont.className} flex min-h-[100vh] max-w-[100vw] bg-[#f8f8f8] `}
       >
         <div className="flex w-[100%] flex-col gap-5 p-5">
+          <div className="flex flex-row justify-between">
+            <Breadcrumbs paths={["MarketPlace", selectedStatus]} />
+            <Link className="bg-sky-600 text-white px-3 py-2 rounded-lg" href={"/create-project"}>Create Project</Link>
+          </div>
           <div className="flex flex-wrap gap-5 ">
             <div
               onClick={() => handleClick(MarketPlaceEnum.ALLLISTINGS)}
