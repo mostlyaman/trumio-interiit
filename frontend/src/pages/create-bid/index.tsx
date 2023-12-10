@@ -90,6 +90,7 @@ export default function Home() {
       const result = mutate({
         userID: userId,
         bid_data: bidData,
+        projectId: project?.id
       })
     } catch (error) {
       console.error('Error creating bid:', error);
@@ -219,7 +220,7 @@ export default function Home() {
                 onClick={(isPreview?handleSubmit:handleClick)}
               >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
-                  Save & Continue <RightIcon />
+                   & Continue <RightIcon />
                 </span>
               </div>
             </div>
