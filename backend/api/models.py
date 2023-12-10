@@ -1,6 +1,7 @@
 import datetime
 from pydantic import BaseModel
 from typing import List, Optional
+from enum import Enum
 
 
 class Chapter(BaseModel):
@@ -40,6 +41,7 @@ class Milestone(BaseModel):
     name: str
     description: str
     duration: str
+    skills_required: List[str] | None
 
 
 class MilestonesRequest(BaseModel):
@@ -58,12 +60,31 @@ class Team(BaseModel):
     members: List[TeamMember]
 
 
+class Budget(BaseModel):
+    amount: str
+    currency: str
+
+
+class ProjectStatus(str, Enum):
+    active = "active"
+    completed = "completed"
+    cancelled = "cancelled"
+
+
+class ProjectProgress(BaseModel):
+    completed: int
+    total: int
+
+
 class Project(BaseModel):
     name: str
     description: str
     expected_duration: str
     listing_duration: str
     team: Team
+    budget: Budget
+    progress: ProjectProgress
+    status: ProjectStatus
     meeting_transcripts: List[MeetingTranscript] | None
     milestones: List[Milestone]
     skills_required: List[str] | None
@@ -231,9 +252,3 @@ class GithubUserProfile(BaseModel):
 
 class GithubUserProfileRequest(BaseModel):
     username: str
-
-
-# TODO: Add Project budget
-# TODO: Add Project status
-# TODO: Add Project progress
-# TODO: Add Skill required in Milestone
