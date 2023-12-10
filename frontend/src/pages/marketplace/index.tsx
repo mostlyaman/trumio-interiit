@@ -43,7 +43,6 @@ export default function Home() {
   };
   let len = 0;
   const { data: bid_proj } = api.user.getUser.useQuery();
-
   data?.forEach(value => {
     const found = bid_proj?.bids.find((item) => {
       if (item.projectId === value.id) return true;
@@ -634,14 +633,12 @@ const ProjectComp = ({
   };
   const { data } = api.project.getMyProjects.useQuery();
   let user;
-
   const project = data?.projects?.find(
     (proje) => proje.projectid === proj?.projectid,
   );
-
   if (project) {
     const clientTeamMember = project.team_members.find(
-      (member) => member.role === "null",
+      (member) => member.role === "client",
     );
     console.log(clientTeamMember?.id);
     if (clientTeamMember) {
