@@ -226,10 +226,10 @@ class RepoFileData(BaseModel):
 class RepoData(BaseModel):
     name: str
     owner: GithubUser
-    summary: str
+    summary: Optional[str] = None
     url: str
     commits: List[CommitData]
-    repo_files: List[RepoFileData]
+    repo_files: Optional[List[RepoFileData]] = None
 
 
 class RepoDataRequest(BaseModel):

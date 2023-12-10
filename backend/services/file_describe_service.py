@@ -55,7 +55,6 @@ def describe_files(
     )
 
     if response.choices[0].message.content:
-        print(response.choices[0].message.content)
         response_json = json.loads(response.choices[0].message.content)
 
         return RepoFilesDescriptionResponse(

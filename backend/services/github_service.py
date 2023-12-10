@@ -55,22 +55,28 @@ class GithubService:
         response = requests.get(url, headers=self.headers)
 
         if response.status_code == 200:
-            return CommitsResponse(
-                commits=[
-                    Commit(
-                        sha=commit["sha"],
-                        message=commit["commit"]["message"],
-                        author=GithubUser(
-                            name=commit["commit"]["author"]["name"],
-                            email=commit["commit"]["author"]["email"],
-                            username=commit["author"]["login"],
-                            avatar_url=commit["author"]["avatar_url"],
-                        ),
-                        timestamp=commit["commit"]["author"]["date"],
-                    )
-                    for commit in response.json()
-                ]
-            )
+            for commit in response.json():
+                name = commit["commit"]["author"]["name"]
+                email = commit["commit"]["author"]["email"]
+                username = commit["author"]["login"]
+                avatar_url = commit["author"]["avatar_url"]
+
+                return CommitsResponse(
+                    commits=[
+                        Commit(
+                            sha=commit["sha"],
+                            message=commit["commit"]["message"],
+                            author=GithubUser(
+                                name=name,
+                                email=email,
+                                username=username,
+                                avatar_url=avatar_url,
+                            ),
+                            timestamp=commit["commit"]["author"]["date"],
+                        )
+                        for commit in response.json()
+                    ]
+                )
 
     def get_directory_content(self, directory: dict) -> list[RepoContent]:
         url = directory["url"]
@@ -188,68 +194,96 @@ class GithubService:
                 error="Profile data not found",
             )
 
-        commits = self.get_commits(
-            CommitRequest(owner=request.owner, repo=request.repo, since=request.since)
-        )
-
         commits_data = []
 
-        if commits:
-            for commit in commits.commits:
-                commits_data.append(
-                    CommitData(
-                        sha=commit.sha,
-                        message=commit.message,
-                        author=commit.author,
-                        timestamp=commit.timestamp,
-                    )
-                )
-
-        # Repo Files
-        files = []
-        summary = ""
-        repo_files = self.get_repo_files(
-            RepoContentRequest(owner=request.owner, repo=request.repo)
-        )
-
-        if repo_files:
-            contents = []
-            for file in repo_files.repo_content:
-                content = self.get_repo_file_content(
-                    RepoFileRequest(
-                        owner=request.owner, repo=request.repo, path=file.path
-                    )
-                )
-
-                if content:
-                    contents.append(content)
-
-            descriptions_and_summary = describe_files(
-                RepoFilesDescriptionRequest(repo_files=contents)
+        if not request.since:
+            commits = self.get_commits(
+                CommitRequest(owner=request.owner, repo=request.repo)
             )
 
-            descriptions = descriptions_and_summary.repo_files_description
-
-            summary = descriptions_and_summary.summary
-
-            for file, description in zip(contents, descriptions):
-                files.append(
-                    RepoFileData(
-                        name=file.name,
-                        description=description.description,
-                        path=file.path,
-                        url=file.url,
+            if commits:
+                for commit in commits.commits:
+                    commits_data.append(
+                        CommitData(
+                            sha=commit.sha,
+                            message=commit.message,
+                            author=commit.author,
+                            timestamp=commit.timestamp,
+                        )
                     )
+
+            files = []
+            summary = ""
+            repo_files = self.get_repo_files(
+                RepoContentRequest(owner=request.owner, repo=request.repo)
+            )
+
+            if repo_files:
+                contents = []
+                for file in repo_files.repo_content:
+                    content = self.get_repo_file_content(
+                        RepoFileRequest(
+                            owner=request.owner, repo=request.repo, path=file.path
+                        )
+                    )
+
+                    if content:
+                        contents.append(content)
+
+                descriptions_and_summary = describe_files(
+                    RepoFilesDescriptionRequest(repo_files=contents)
                 )
 
-        return RepoDataResponse(
-            repo_data=RepoData(
-                name=request.repo,
-                owner=profile,
-                commits=commits_data,
-                repo_files=files,
-                summary=summary,
-                url=f"https://github.com/{request.owner}/{request.repo}",
-            ),
-            error=None,
-        )
+                descriptions = descriptions_and_summary.repo_files_description
+
+                summary = descriptions_and_summary.summary
+
+                for file, description in zip(contents, descriptions):
+                    files.append(
+                        RepoFileData(
+                            name=file.name,
+                            description=description.description,
+                            path=file.path,
+                            url=file.url,
+                        )
+                    )
+
+            return RepoDataResponse(
+                repo_data=RepoData(
+                    name=request.repo,
+                    owner=profile,
+                    commits=commits_data,
+                    repo_files=files,
+                    summary=summary,
+                    url=f"https://github.com/{request.owner}/{request.repo}",
+                ),
+                error=None,
+            )
+        else:
+            commits = self.get_commits(
+                CommitRequest(
+                    owner=request.owner, repo=request.repo, since=request.since
+                )
+            )
+
+            if commits:
+                for commit in commits.commits:
+                    commits_data.append(
+                        CommitData(
+                            sha=commit.sha,
+                            message=commit.message,
+                            author=commit.author,
+                            timestamp=commit.timestamp,
+                        )
+                    )
+
+            return RepoDataResponse(
+                repo_data=RepoData(
+                    name=request.repo,
+                    owner=profile,
+                    summary=None,
+                    repo_files=None,
+                    commits=commits_data,
+                    url=f"https://github.com/{request.owner}/{request.repo}",
+                )
+            )
