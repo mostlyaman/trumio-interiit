@@ -24,10 +24,12 @@ export default function Layout({ children }: LayoutProps) {
   const router = useRouter()
   const { data, isLoading } = api.user.getUser.useQuery({}, { enabled: !user && isSignedIn })
   React.useEffect(() => {
+    console.log(data?.role)
+    if(data?.role === "null") router.push('/auth')
     if(data && !user) {
       setUser(data)
     }
-  })
+  },[data,user])
 
   React.useEffect(() => {
     if(router.pathname !== '/create-bid' && router.pathname !== '/bid') {

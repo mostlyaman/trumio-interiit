@@ -26,5 +26,17 @@ export const userRouter = createTRPCRouter({
       });
       // TODO: create user in messaging websocket with messaging_password
       return user
+    }),
+
+  updateUserRole: privateProcedure
+    .input(z.object({text: z.string()}))
+    .mutation(async ({ ctx: { db, userId },input }) => {
+      const user = await db.user.update({
+        where: { id: userId },
+        data:{
+          role:input.text
+        }
+      });
+      return user
     })
 });

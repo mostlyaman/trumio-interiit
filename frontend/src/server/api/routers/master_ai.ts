@@ -24,10 +24,4 @@ export const masterAiRouter = createTRPCRouter({
         }
       })
     }),
-  
-  linkGithubRepo: privateProcedure
-    .input(z.string())
-    .mutation(async ({ ctx: { db, userId } }) => {
-      
-    })
 })

@@ -1,7 +1,21 @@
 import Image from "next/image";
 import Link from "next/link";
+import { api } from "~/utils/api";
 
 export default function Home() {
+
+  const {mutate} = api.user.updateUserRole.useMutation()
+  const handleClick = (role:string) => {
+    try {
+      const result = mutate({
+        text:role
+      })
+      console.log(result)
+      
+    } catch (error) {
+      console.error('Error creating bid:', error);
+    }
+  }
   return (
     <>
       <div className="flex h-[100vh] w-[100%] justify-center bg-[#FFFFFF]">
@@ -20,11 +34,11 @@ export default function Home() {
             </div>
             <div className="text-2xl pl-1">Welcome!</div>
             <div className="flex flex-col gap-4 mt-5">
-              <Link href={"/talentonboarding"} className="flex flex-col justify-center cursor-pointer items-center bg-white p-5 shadow-md rounded-md">
+              <Link onClick={() => handleClick("talent")} href={"/talentonboarding"} className="flex flex-col justify-center cursor-pointer items-center bg-white p-5 shadow-md rounded-md">
                 <span className="text-[#0065C1] text-xl">Talent</span>
                 <span className="text-sm font-light">Find projects and teams</span>
               </Link>
-              <Link href={"/clientonboarding"} className="flex flex-col justify-center cursor-pointer items-center bg-white p-5 shadow-md rounded-md">
+              <Link onClick={() => handleClick("client")} href={"/clientonboarding"} className="flex flex-col justify-center cursor-pointer items-center bg-white p-5 shadow-md rounded-md">
                 <span className="text-[#0065C1] text-xl">Client</span>
                 <span className="text-sm font-light">Hire great teams and talent</span>
               </Link>
