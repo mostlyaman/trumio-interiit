@@ -4,6 +4,7 @@ import RightIcon from "../icons/RightIcon";
 import ProjectStatus from "./ProjectStatus"
 import { useState } from "react";
 import InlineForm from "./InlineForm";
+import Image from "next/image";
 
 
 const mont = Montserrat({ subsets: ['latin'] })
@@ -82,10 +83,12 @@ export default function Project() {
         </div>
         <div className="h-[50vh] bg-white shadow-lg rounded-lg w-[100%] flex justify-center items-center">
           <figure className="flex flex-col justify-center items-center">
-            <img
+            <Image
               className="h-[200px] w-[200px]"
               src="/images/searching.gif"
               alt=""
+              width="22"
+              height="22"
             />
             <figcaption className="text-[#2863C2]">No Data Found!</figcaption>
           </figure>

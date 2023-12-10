@@ -19,6 +19,9 @@ export const userRouter = createTRPCRouter({
         update: {},
         create: {
           id: userId
+        },
+        include: {
+          bids:true
         }
       });
       // TODO: create user in messaging websocket with messaging_password

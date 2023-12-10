@@ -56,7 +56,7 @@ export default function Home() {
 
   const [startDate,setStartDate] = useState<Date>(new Date())
 
-  const { project } = useProjectStore();
+  const { project,resetProject } = useProjectStore();
 
   const router = useRouter();
 
@@ -85,6 +85,7 @@ export default function Home() {
     const bidData = bid.bid_data;
     console.log(typeof(bidData))
     console.log(bidData)
+    resetProject()
 
     try {
       const result = mutate({
@@ -97,10 +98,25 @@ export default function Home() {
     }
   };
 
+  const { data } = api.project.getMyProjects.useQuery();
+  let user;
+  const project1 = data?.projects?.find(
+    (proje) => proje?.id === project?.id,
+  );
+  if (project1) {
+    const clientTeamMember = project1.team_members.find(
+      (member) => member.role === "null",
+    );
+    console.log(clientTeamMember?.id);
+    if (clientTeamMember) {
+      user = data?.users.get(clientTeamMember?.id);
+    }
+  }
+
   return (
     <>
       <div
-        className={`${mont.className} items flex min-h-[100vh] justify-center bg-[#F8F8F8] pb-[2rem]`}
+        className={`${mont.className} items pt-[2rem] flex min-h-[100vh] justify-center bg-[#F8F8F8] pb-[2rem]`}
       >
         <div className="mx-[2vw] flex w-[100%] justify-between gap-5">
           <div className="flex h-[max-content] w-[25%] flex-col gap-3 rounded-lg bg-white p-5 shadow-lg">
@@ -112,16 +128,16 @@ export default function Home() {
                   .join(" ")}
               </span>
               <span className=" text-sm font-medium text-red-500">
-                {project?.duration_length} Days left
+                {project?.duration} Days left
               </span>
             </div>
             <div>{project?.project_name}</div>
             <div className="mt-2 flex items-center gap-3">
               <span className="pt-2">
-                <Avatar radius="full" fallback="A" size="2" />
+                <Avatar radius="full" fallback="A" size="2" src={user?.imageUrl}/>
               </span>
               <div className="flex flex-col">
-                <div>Created By</div>
+                <div>{user?.firstName} {user?.lastName} </div>
                 <div className="flex items-center gap-2 text-xs ">
                   <span className="flex items-center rounded-md bg-[#FFEDE0] px-2 py-[2px]">
                     <span className="text-[#FF9F43]">
@@ -220,7 +236,7 @@ export default function Home() {
                 onClick={(isPreview?handleSubmit:handleClick)}
               >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
-                   & Continue <RightIcon />
+                   Save & Continue <RightIcon />
                 </span>
               </div>
             </div>

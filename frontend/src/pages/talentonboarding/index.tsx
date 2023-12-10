@@ -12,6 +12,8 @@ import { useUser } from "@clerk/nextjs";
 import { Avatar } from "@radix-ui/themes";
 import InfoIcon from "~/components/icons/InfoIcon";
 import RightIcon from "~/components/icons/RightIcon";
+import { User } from "@clerk/nextjs/server";
+import Link from "next/link";
 
 export default function Home() {
   const [state, setState] = useState<string>("Account");
@@ -86,9 +88,9 @@ export default function Home() {
               </span>
             )}
             {state === "Payment" ? (
-              <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
+              <Link href={"/marketplace"} className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
                 Save Changes
-              </span>
+              </Link>
             ) : (
               <span
                 onClick={handleNext}
@@ -151,6 +153,8 @@ const AccountSection = () => {
                 id="name"
                 className="dark block w-full flex-grow rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900"
                 placeholder="First Name"
+                value = {`${user.user?.firstName}`}
+                disabled
               />
             </div>
             <div className="mb-5 flex-grow">
@@ -161,10 +165,12 @@ const AccountSection = () => {
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
-                type="name"
+                type="lastname"
                 id="name"
                 className="dark block w-full rounded-lg border border-gray-300  bg-gray-50 p-2.5 text-sm text-gray-900"
                 placeholder="Last Name"
+                value = {`${user.user?.lastName}`}
+                disabled
               />
             </div>
           </div>
@@ -203,6 +209,7 @@ const AccountSection = () => {
               </label>
               <input
                 type="email"
+                disabled  
                 id="email"
                 className="dark block w-full rounded-lg border border-gray-300  bg-gray-50 p-2.5 text-sm text-gray-900"
                 placeholder="Email Address"

@@ -30,7 +30,7 @@ export default function Layout({ children }: LayoutProps) {
   })
 
   React.useEffect(() => {
-    if(router.pathname !== '/create-bid') {
+    if(router.pathname !== '/create-bid' && router.pathname !== '/bid') {
       resetBid()
       resetProject()
     }
@@ -38,8 +38,8 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <>
-      <Navbar />
-      <div className={"min-h-[100vh] pt-[7vh] bg-gray-100 overflow-scroll" + mont.className}>
+      {router.pathname === '/auth'?"":<Navbar />}
+      <div className={`min-h-[100vh] ${router.pathname === '/auth'?"":"pt-[7vh]"} bg-gray-100 overflow-scroll" + mont.className`}>
         {children}
       </div> 
       {/* {

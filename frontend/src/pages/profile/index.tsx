@@ -28,10 +28,26 @@ export default function Home() {
               <StarIcon className="h-[22px] w-[22px]" />
               <StarIcon className="h-[22px] w-[22px]" />
             </div>
-            <div className="flex gap-1 text-xs font-semibold">
+            <div className="flex gap-1 text-xs ">
               <span>0 Projects |</span>
               <span>0 Reviews</span>
             </div>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex gap-1 text-[#FFA34A] ">
+              <StarIcon className="h-[22px] w-[22px]" />
+              <StarIcon className="h-[22px] w-[22px]" />
+              <StarIcon className="h-[22px] w-[22px]" />
+              <StarIcon className="h-[22px] w-[22px]" />
+              <StarIcon className="h-[22px] w-[22px]" />
+            </div>
+            <div className="flex gap-1 text-xs">
+              Trumio Rating
+            </div>
+          </div>
+          <div className="flex text-xs mx-2 items-start flex-col gap-1 ">
+            <span className="text-xl font-light border-b border-slate-200 pb-2 w-[100%]">Trumio Reviews</span>
+            <span className="mt-2">Highly active on platform, usually responds within 6 hrs, top dispute solver.</span>
           </div>
           <div className="flex w-[100%] flex-col justify-start p-3">
             <div className="border-b border-slate-200 pb-2 text-xl font-light">

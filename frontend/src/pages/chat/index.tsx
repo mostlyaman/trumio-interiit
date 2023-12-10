@@ -20,9 +20,9 @@ export default function ChatPage() {
   const [selectedProject, setSelectedProject] = useState<ProjectWithGithubRepos | null>(null);
 
 
-  const { data: projects, isLoading: isLoadingProjects } = api.project.getMyProjects.useQuery({})
+  const { data: projects1, isLoading: isLoadingProjects } = api.project.getMyProjects.useQuery({})
 
-
+  const projects = projects1?.projects
   return (
     <>
       <Head>
@@ -63,7 +63,7 @@ export default function ChatPage() {
                 <div className="flex justify-center mt-3">
                   <Loading className="w-4 h-4"/>
                 </div> :
-
+                (projects?.length === 0) ? "No Projects Found" :
                 (!openProjectChat || !projects || projects?.length === 0) ? null :
                 <>
                 
@@ -76,7 +76,6 @@ export default function ChatPage() {
                           options={projects?.map((project) => ({ label: project.project_name, value: project }))} 
                         />
                       }
-
 
                     {
                       selectedProject ?

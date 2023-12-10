@@ -42,7 +42,7 @@ export default function MasterAI({ project }: MasterAIProps) {
         username: username,
         repo: repo,
         projectId: project.id,
-      });
+      });bi
     } catch (error) {
       console.error("Error creating bid:", error);
     }
