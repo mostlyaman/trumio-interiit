@@ -2,7 +2,7 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from api.models import Project
+from api.models import MoM, Project
 
 load_dotenv()
 
@@ -21,11 +21,11 @@ def create_prompt(project: Project):
     Project Description: {project.description} \n
     Project Duration: {project.duration} {project.duration_unit} \n
 
-    Project Team: \n
-    """
+    # Project Team: \n
+    # """
 
-    for member in project.team.members:
-        prompt += f"Name: {member.name}, Role: {member.role} \n"
+    # for member in project.team.members:
+    #     prompt += f"Name: {member.name}, Role: {member.role} \n"
 
     prompt += """ \n
     Project Milestones: \n
@@ -111,6 +111,73 @@ async def get_chapters_from_transcription(transcription: str, prompt: str):
             response_json = json.loads(response.choices[0].message.content)
             # print(response_json)
             return response_json
+
+    except Exception as e:
+        return {"status": "Internal Server Error 500", "message": str(e), "error": True}
+
+
+def get_minutes_of_meetings_from_transcription(transcription: str):
+    prompt = """ You have given a meeting transcription. You have to understand the meeting and give a list of Key Points discussed in the meeting. You can use the following format to return the minutes of meeting as json. \n"""
+
+    prompt += """ \n
+    {
+        "Minutes": [
+            {
+                "agenda": "<Agenda of the meeting>",
+                "key_points": [
+                    "<Key Point 1>",
+                    "<Key Point 2>",
+                    "<Key Point 3>",
+                ],
+                "action_items": [
+                    "<Action Item 1>",
+                    "<Action Item 2>",
+                    "<Action Item 3>",
+                ],
+            },
+            {
+                "agenda": "<Agenda of the meeting>",
+                "key_points": [
+                    "<Key Point 1>",
+                    "<Key Point 2>",
+                    "<Key Point 3>",
+                ],
+                "action_items": [
+                    "<Action Item 1>",
+                    "<Action Item 2>",
+                    "<Action Item 3>",
+                ],
+            },
+        ],
+        "error": False
+    }
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo-16k",
+            messages=[
+                {
+                    "role": "system",
+                    "content": prompt,
+                },
+                {"role": "user", "content": f"{transcription}"},
+            ],
+        )
+        if response.choices[0].message.content:
+            print(response.choices[0].message.content)
+            response_json = json.loads(response.choices[0].message.content)
+            print(response_json)
+            moms = []
+            for mom in response_json["Minutes"]:
+                moms.append(
+                    MoM(
+                        agenda=mom["agenda"],
+                        key_points=mom["key_points"],
+                        action_items=mom["action_items"],
+                    )
+                )
+            return moms
 
     except Exception as e:
         return {"status": "Internal Server Error 500", "message": str(e), "error": True}

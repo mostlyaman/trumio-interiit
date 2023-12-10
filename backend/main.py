@@ -5,15 +5,20 @@ from api.models import (
     CommitDiffRequest,
     RepoDataRequest,
     RepoFileRequest,
+    RepoFiles,
     RepoFilesDescriptionRequest,
     MilestonesRequest,
     Project,
     CommitRequest,
+    Transcript,
 )
+
+# from services.chroma_service import add_repodata_to_github_repo_collection
 from services.file_describe_service import describe_files
 from services.transcript_service import (
     create_prompt,
     get_chapters_from_transcription,
+    get_minutes_of_meetings_from_transcription,
 )
 from services.milestone_service import generate_milestones, create_milestone_prompt
 from services.github_service import GithubService, RepoContentRequest
@@ -33,6 +38,11 @@ else:
 app = FastAPI()
 
 
+@app.on_event("startup")
+async def startup_event():
+    print("startup_event")
+
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
@@ -45,6 +55,11 @@ async def get_transcript_chapters(transcript: str, project: Project):
     print("prompt: ", prompt)
 
     return await get_chapters_from_transcription(transcript, prompt)
+
+
+@app.post("/mom")
+async def get_mom(request: Transcript):
+    return get_minutes_of_meetings_from_transcription(request.text)
 
 
 @app.post("/milestones")
