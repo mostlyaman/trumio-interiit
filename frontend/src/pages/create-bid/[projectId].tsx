@@ -5,16 +5,26 @@ import WatchIcon from "~/components/icons/WatchIcon";
 import TickIcon from "~/components/icons/TickIcon";
 import InfoIcon from "~/components/icons/InfoIcon";
 import RightIcon from "~/components/icons/RightIcon";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, Link2Icon, PlusIcon, StarFilledIcon } from "@radix-ui/react-icons";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ClockIcon,
+  Link2Icon,
+  PlusIcon,
+  StarFilledIcon,
+} from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
 import { Montserrat } from "next/font/google";
 import { useRouter } from "next/router";
 import { api } from "~/utils/api";
 import { useUser } from "@clerk/nextjs";
-import * as uuid from 'uuid';
+import * as uuid from "uuid";
+import { MilestoneSchema } from "./types";
+import React from "react";
+import Loading from "~/components/Loading";
 
 const mont = Montserrat({ subsets: ["latin"] });
-
 
 const TruncatedDescription = ({ description }: { description: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -51,35 +61,53 @@ const TruncatedDescription = ({ description }: { description: string }) => {
 export default function Home() {
   const [isPreview, setPreview] = useState<boolean>(false);
   const [milestones, setMiles] = useState<MilestoneSchema[]>([]);
-  const [startDate,setStartDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date>(new Date());
 
-  const router = useRouter()
-  if(typeof router.query.projectId != 'string') {
-    router.push('/marketplace').catch((err) => console.error(err))
+  const router = useRouter();
+  if (typeof router.query.projectId != "string") {
+    router.push("/marketplace").catch((err) => console.error(err));
   }
-  const { data: project, isLoading } = api.project.getProject.useQuery({ projectId: router.query.projectId as string })
+  const { data: project, isLoading } = api.project.getProject.useQuery({
+    projectId: router.query.projectId as string,
+  });
 
   const createBidMutation = api.project.createBid.useMutation();
 
-  const user = useUser()
+  const user = useUser();
 
   const handleSubmit = () => {
     try {
-      if(project) {
+      if (project) {
         createBidMutation.mutate({
           bid_data: { milestones: milestones, start_date: startDate },
-          projectId: project.id
-        })
+          projectId: project.id,
+        });
       }
     } catch (error) {
-      console.error('Error creating bid:', error);
+      console.error("Error creating bid:", error);
+    }
+  };
+  const ai_milestones_mutation = api.project.getMilestones.useMutation();
+
+  const get_ai_milestones = async (project_id: string) => {
+    const ai_milestones = await ai_milestones_mutation.mutateAsync({
+      projectId: project_id,
+    });
+    if (ai_milestones instanceof Error) {
+    } else {
+      setMiles(ai_milestones);
     }
   };
 
+  React.useEffect(() => {
+    if (project && !ai_milestones_mutation.isSuccess) {
+      get_ai_milestones(project.id).catch((err) => console.error(1, err));
+    }
+  }, [project]);
   return (
     <>
       <div
-        className={`${mont.className} items pt-[2rem] flex min-h-[100vh] justify-center bg-[#F8F8F8] pb-[2rem]`}
+        className={`${mont.className} items flex min-h-[100vh] justify-center bg-[#F8F8F8] pb-[2rem] pt-[2rem]`}
       >
         <div className="mx-[2vw] flex w-[100%] justify-between gap-5">
           <div className="flex h-[max-content] w-[25%] flex-col gap-3 rounded-lg bg-white p-5 shadow-lg">
@@ -97,16 +125,20 @@ export default function Home() {
             <div>{project?.project_name}</div>
             <div className="mt-2 flex items-center gap-3">
               <span className="pt-2">
-                {
-                  !user.user?.imageUrl ? null :
-                  <Avatar radius="full" fallback="A" size="2" src={user.user.imageUrl}/>
-                }
+                {!user.user?.imageUrl ? null : (
+                  <Avatar
+                    radius="full"
+                    fallback="A"
+                    size="2"
+                    src={user.user.imageUrl}
+                  />
+                )}
               </span>
               <div className="flex flex-col">
                 <div>
-                  {
-                    !user.user ? null : `${user.user.firstName} ${user.user.lastName}`
-                  } 
+                  {!user.user
+                    ? null
+                    : `${user.user.firstName} ${user.user.lastName}`}
                 </div>
                 <div className="flex items-center gap-2 text-xs ">
                   <span className="flex items-center rounded-md bg-[#FFEDE0] px-2 py-[2px]">
@@ -187,14 +219,17 @@ export default function Home() {
               <Addmilestone
                 setMiles={setMiles}
                 milestones={milestones}
-                setStartDate = {setStartDate}
+                setStartDate={setStartDate}
                 startDate={startDate}
+                aiLoadingMutation={ai_milestones_mutation}
               />
             )}
             <div className="flex items-center justify-between">
               <div
                 className="flex cursor-pointer items-center gap-2 text-[#0065C1]"
-                onClick={()=>{ setPreview(false) }}
+                onClick={() => {
+                  setPreview(false);
+                }}
               >
                 <span className="rounded-full bg-[#D9E9F5] p-1">
                   <ChevronLeftIcon />
@@ -203,10 +238,16 @@ export default function Home() {
               </div>
               <div
                 className=" flex items-center justify-center"
-                onClick={isPreview ? handleSubmit: (()=>{ setPreview(true) })}
+                onClick={
+                  isPreview
+                    ? handleSubmit
+                    : () => {
+                        setPreview(true);
+                      }
+                }
               >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
-                   Save & Continue <ChevronRightIcon />
+                  Save & Continue <ChevronRightIcon />
                 </span>
               </div>
             </div>
@@ -226,12 +267,11 @@ function MilesStonesComp({
   setMiles: (newMilstone: MilestoneSchema) => void;
   milestone: MilestoneSchema;
 }) {
-
   return (
     <>
       <div className="mt-5 flex flex-col justify-between gap-5 rounded-md bg-[#FFFFFF] p-4 shadow-md">
         <div className="flex w-[100%] justify-between">
-          <span>Milestone-{index+1}</span>
+          <span>Milestone-{index + 1}</span>
           <div className="flex gap-2 text-sm">
             <div className="flex flex-col gap-3">
               <span>
@@ -242,7 +282,12 @@ function MilesStonesComp({
                   type="number"
                   name="duration"
                   value={milestone.duration}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, duration: parseInt((e.target as HTMLInputElement).value) })}}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setMiles({
+                      ...milestone,
+                      duration: parseInt((e.target as HTMLInputElement).value),
+                    });
+                  }}
                   placeholder="Enter"
                   id="date"
                   className=" rounded-md border px-2 py-2"
@@ -261,7 +306,12 @@ function MilesStonesComp({
                   name="talent cost"
                   placeholder="Enter"
                   value={milestone.cost}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, cost: parseInt((e.target as HTMLInputElement).value) })}}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setMiles({
+                      ...milestone,
+                      cost: parseInt((e.target as HTMLInputElement).value),
+                    });
+                  }}
                   id="date"
                   className=" rounded-md border px-2 py-2"
                   required
@@ -285,7 +335,12 @@ function MilesStonesComp({
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter name"
                   value={milestone.name}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, name: (e.target as HTMLInputElement).value })}}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setMiles({
+                      ...milestone,
+                      name: (e.target as HTMLInputElement).value,
+                    });
+                  }}
                   minLength={4}
                   required
                 />
@@ -297,7 +352,12 @@ function MilesStonesComp({
                 <textarea
                   id="message"
                   value={milestone.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setMiles({ ...milestone, description: (e.target as HTMLTextAreaElement).value })}}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                    setMiles({
+                      ...milestone,
+                      description: (e.target as HTMLTextAreaElement).value,
+                    });
+                  }}
                   rows={4}
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm"
                   placeholder="Enter description in 500 characters"
@@ -307,41 +367,47 @@ function MilesStonesComp({
           </div>
           <div className="flex h-[max-content] flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
             <div>Deliverable Details</div>
-            {
-              milestone.deliverables.map((deliverable, deliverableIndex) =>
-                <input
-                  type="text"
-                  key={deliverable.id}
-                  id="deliverable"
-                  className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter deliverable"
-                  minLength={4}
-                  value={deliverable.text}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    setMiles({
-                      ...milestone,
-                      deliverables: milestone.deliverables.map((oldDeliverable, oldDeliverableIndex) => {
-                        if(oldDeliverableIndex !== deliverableIndex) {
-                          return oldDeliverable
+            {milestone.deliverables.map((deliverable, deliverableIndex) => (
+              <input
+                type="text"
+                key={deliverable.id}
+                id="deliverable"
+                className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Enter deliverable"
+                minLength={4}
+                value={deliverable.text}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  setMiles({
+                    ...milestone,
+                    deliverables: milestone.deliverables.map(
+                      (oldDeliverable, oldDeliverableIndex) => {
+                        if (oldDeliverableIndex !== deliverableIndex) {
+                          return oldDeliverable;
                         } else {
-                          return { id: oldDeliverable.id, text: (e.target as HTMLInputElement).value }
+                          return {
+                            id: oldDeliverable.id,
+                            text: (e.target as HTMLInputElement).value,
+                          };
                         }
-                      })
-                    })
-                  }}
-                  required
-                />
-              )
-            }
-            <button onClick={() => {
-              setMiles({
-                ...milestone,
-                deliverables: [
-                  ...milestone.deliverables,
-                  { id: uuid.v4(), text: "" }
-                ]
-              })
-            }} className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]">
+                      },
+                    ),
+                  });
+                }}
+                required
+              />
+            ))}
+            <button
+              onClick={() => {
+                setMiles({
+                  ...milestone,
+                  deliverables: [
+                    ...milestone.deliverables,
+                    { id: uuid.v4(), text: "" },
+                  ],
+                });
+              }}
+              className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]"
+            >
               <span className="rounded-full bg-[#E0F0FC] p-2">
                 <PlusIcon />
               </span>
@@ -357,18 +423,19 @@ const Addmilestone = ({
   setMiles,
   milestones,
   setStartDate,
-  startDate
+  startDate,
+  aiLoading,
 }: {
   setMiles: React.Dispatch<React.SetStateAction<MilestoneSchema[]>>;
   milestones: MilestoneSchema[];
-  startDate:Date
-  setStartDate:React.Dispatch<React.SetStateAction<Date>>
+  startDate: Date;
+  setStartDate: React.Dispatch<React.SetStateAction<Date>>;
+  aiLoading: boolean;
 }) => {
-
-  const handleDate = (e:React.ChangeEvent<HTMLInputElement>) =>{
-    const date = new Date(e.target.value)
-    setStartDate(date)
-  }
+  const handleDate = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = new Date(e.target.value);
+    setStartDate(date);
+  };
   const handleAdd = () => {
     setMiles([
       ...milestones,
@@ -379,49 +446,55 @@ const Addmilestone = ({
         cost: 0,
         duration: 0,
         deliverables: [],
-      }
+      },
     ]);
   };
-  
-  const estimated_duration = milestones.reduce((total, item) => total + item.duration, 0)
+
+  const estimated_duration = milestones.reduce(
+    (total, item) => total + item.duration,
+    0,
+  );
   const cost_net = milestones.reduce((total, item) => total + item.cost, 0);
 
   return (
     <>
-      <div className="rounded-lg bg-[#FAFAFA] p-4 shadow-md">
-        <div className="border-b border-slate-200 pb-1">
-          Create milestones that will make it easier to work on and track this
-          project
-        </div>
-        <div className="mt-5 flex justify-between rounded-md bg-white p-4 text-sm shadow-md">
-          <div className="flex flex-col gap-3">
-            <span>
-              Start Date<span className="text-red-500">*</span>
-            </span>
-            <input
-              required
-              type="date"
-              name="date"
-              value={startDate.toISOString().substr(0, 10)}
-              onChange={handleDate}
-              placeholder="select start date"
-              id="date"
-              className=" rounded-md border px-5 py-2"
-            />
+      {aiLoading ? (
+        <Loading className="scale-90" />
+      ) : (
+        <div className="rounded-lg bg-[#FAFAFA] p-4 shadow-md">
+          <div className="border-b border-slate-200 pb-1">
+            Create milestones that will make it easier to work on and track this
+            project
           </div>
-          <div className="flex gap-5">
-            <div className="mr-5 flex flex-col items-end gap-3">
-              <span>Estimated Duration</span>
-              <span>{estimated_duration}w</span>
+          <div className="mt-5 flex justify-between rounded-md bg-white p-4 text-sm shadow-md">
+            <div className="flex flex-col gap-3">
+              <span>
+                Start Date<span className="text-red-500">*</span>
+              </span>
+              <input
+                required
+                type="date"
+                name="date"
+                value={startDate.toISOString().substr(0, 10)}
+                onChange={handleDate}
+                placeholder="select start date"
+                id="date"
+                className=" rounded-md border px-5 py-2"
+              />
             </div>
-            <div className="mr-5 flex flex-col items-end gap-3">
-              <span>Total cost</span>
-              <span>$ {cost_net}</span>
+            <div className="flex gap-5">
+              <div className="mr-5 flex flex-col items-end gap-3">
+                <span>Estimated Duration</span>
+                <span>{estimated_duration}w</span>
+              </div>
+              <div className="mr-5 flex flex-col items-end gap-3">
+                <span>Total cost</span>
+                <span>$ {cost_net}</span>
+              </div>
             </div>
           </div>
-        </div>
-        {milestones.map((value,index) => {
-          return (
+          {milestones.map((value, index) => {
+            return (
               <MilesStonesComp
                 milestone={value}
                 key={value.id}
@@ -429,27 +502,28 @@ const Addmilestone = ({
                 setMiles={(newMilstone) => {
                   setMiles(
                     milestones.map((oldMilestones, oldMilestonesIndex) => {
-                      if(index !== oldMilestonesIndex) {
-                        return oldMilestones
+                      if (index !== oldMilestonesIndex) {
+                        return oldMilestones;
                       } else {
-                        return newMilstone
+                        return newMilstone;
                       }
-                    })
-                  )
+                    }),
+                  );
                 }}
               />
-          );
-        })}
-        <div
-          className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]"
-          onClick={handleAdd}
-        >
-          <span>
-            <PlusIcon />
-          </span>
-          <span>Add Milestone</span>
+            );
+          })}
+          <div
+            className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]"
+            onClick={handleAdd}
+          >
+            <span>
+              <PlusIcon />
+            </span>
+            <span>Add Milestone</span>
+          </div>
         </div>
-      </div>
+      )}
       <div className="flex flex-col gap-4 rounded-lg bg-[#FAFAFA] p-4 shadow-md">
         <div className="border-b border-slate-200 pb-1">Documents</div>
         <div className="flex flex-col gap-3">
@@ -498,7 +572,10 @@ const Addmilestone = ({
   );
 };
 const Preview = ({ milestones }: { milestones: MilestoneSchema[] }) => {
-  const estimated_duration = milestones.reduce((total, item) => total + item.duration, 0);
+  const estimated_duration = milestones.reduce(
+    (total, item) => total + item.duration,
+    0,
+  );
   const cost_net = milestones.reduce((total, item) => total + item.cost, 0);
   return (
     <>

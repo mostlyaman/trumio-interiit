@@ -37,11 +37,11 @@ const parser = StructuredOutputParser.fromZodSchema(
 
 const chain = RunnableSequence.from([
     prompt,
-    new OpenAI(),
+    new OpenAI({maxTokens:-1, maxRetries: 3}),
     parser
 ])
 
-interface MomData {
+export interface MomData {
     agenda: string,
     key_points: string[],
     action_items: string[]

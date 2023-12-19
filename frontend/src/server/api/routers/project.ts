@@ -7,7 +7,9 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
+import * as uuid from 'uuid'
 import { getMilestones } from "~/langchain/milestone";
+import { getMoM } from "~/langchain/mom";
 
 export const projectRouter = createTRPCRouter({
   hello: publicProcedure
@@ -250,7 +252,7 @@ export const projectRouter = createTRPCRouter({
 
       getMilestones: privateProcedure
       .input(z.object({ projectId: z.string() }))
-      .query(async ({ctx: {db, userId}, input}) => {
+      .mutation(async ({ctx: {db, userId}, input}) => {
         const project = await db.project.findUnique({
           where: {
             id: input.projectId
@@ -270,6 +272,24 @@ export const projectRouter = createTRPCRouter({
         }
 
         const result = await getMilestones(project, user)
+
+        if(!result){
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'Error generating milestones.'})
+        }
+        if(result.success) {
+          return result.data
+          .map((mile) => ({ id: uuid.v4(), ...mile }))
+          .map((mile) => ({ ...mile, deliverables: mile.deliverables.map((del) => ({ id: uuid.v4(), text: del })) }))
+        } else {
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': result.data})
+        }
+      }),
+
+      getMOM: privateProcedure
+      .input(z.object({ transcript: z.string() }))
+      .mutation(async ({ctx: {db, userId}, input}) => {
+        const result = await getMoM(input.transcript)
+        
         if(!result){
           return new TRPCError({'code': 'BAD_REQUEST', 'message': 'Error generating milestones.'})
         }
@@ -278,5 +298,6 @@ export const projectRouter = createTRPCRouter({
         } else {
           return new TRPCError({'code': 'BAD_REQUEST', 'message': result.data})
         }
+        
       })
 });

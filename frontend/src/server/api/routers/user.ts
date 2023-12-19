@@ -14,6 +14,8 @@ export const userRouter = createTRPCRouter({
   getUser: privateProcedure
     .input(z.object({}).nullish())
     .query(async ({ ctx: { db, userId } }) => {
+      console.log(userId)
+
       const user = await db.user.upsert({
         where: { id: userId },
         update: {},
