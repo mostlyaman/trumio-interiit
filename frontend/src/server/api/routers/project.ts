@@ -247,4 +247,36 @@ export const projectRouter = createTRPCRouter({
           }
         })
       }),
+
+      getMilestones: privateProcedure
+      .input(z.object({ projectId: z.string() }))
+      .query(async ({ctx: {db, userId}, input}) => {
+        const project = await db.project.findUnique({
+          where: {
+            id: input.projectId
+          }
+        })
+        if(!project) {
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'No such project exists.'})
+        } 
+
+        const user = await db.user.findUnique({
+          where: {
+            id: userId
+          },
+        })
+        if(!user) {
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'No such user exists.'})
+        }
+
+        const result = await getMilestones(project, user)
+        if(!result){
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'Error generating milestones.'})
+        }
+        if(result.success) {
+          return result.data
+        } else {
+          return new TRPCError({'code': 'BAD_REQUEST', 'message': result.data})
+        }
+      })
 });
