@@ -3,6 +3,7 @@ import { RunnableSequence } from 'langchain/schema/runnable'
 import { OpenAI } from "langchain/llms/openai";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { z } from 'zod';
+import type { Project, User } from '@prisma/client';
 
 const prompt = PromptTemplate.fromTemplate(
   `
@@ -21,12 +22,14 @@ const prompt = PromptTemplate.fromTemplate(
       Project Expected Duration: {duration}
       Skills Suggested by the Client: {skills}
       Tools suggested by the Client: {tools}
+      No. of hours requested by Client per week: {hours}
     
     Details about the AI assistant team member:
       Skills preferred by the team: {team_skills}
       Tools preferred by the team: {team_tools}
       No of working hours per week: {team_hours}
       Experience in software developement: {team_experience}
+      Certificates of the Team member: {team_certificates}
 
     END CONTEXT BLOCK
 
@@ -55,19 +58,48 @@ const chain = RunnableSequence.from([
   parser
 ])
 
-export const getMilestones = async () => {
+interface skillsType {
+  _id: string,
+  name: string
+}
+
+interface toolsType {
+  _id: string,
+  name: string
+}
+
+interface CertificatesType {
+  _id: string,
+  name: string
+}
+
+interface MilestoneData {
+  title: string,
+  description: string,
+  deliverables: string[],
+  cost: number,
+  duration: number
+}
+
+
+export const getMilestones = async (
+  project: Project,
+  user: User,
+): Promise<{success: true, data: MilestoneData[] } | {success: false, data: string}> => {
   try {
     const res = await chain.invoke({
       format_instructions: parser.getFormatInstructions(),
-      name: "",
-      description: "",
-      duration: "",
-      skills: "",
-      tools: "",
-      team_skills: "",
-      team_tools: "",
-      team_hours: "",
-      team_experience: ""
+      name: project.project_name,
+      description: project.description,
+      duration: `${project.duration} ${project.duration_unit}`,
+      skills: ((project.skills as unknown[]) as skillsType[]).map((skill) => skill.name).join(", "),
+      tools: ((project.tools as unknown[]) as toolsType[]).map((tool) => tool.name).join(", "),
+      hours: `${(project.weekdays ? project.weekdayEndHour - project.weekdayStartHour : 0) + (project.weekends ? project.weekendEndHour - project.weekdayStartHour : 0)} hours`,
+      team_skills: ((user.skills as unknown[]) as skillsType[]).map((skill) => skill.name).join(", "),
+      team_tools: ((user.tools as unknown[]) as toolsType[]).map((tool) => tool.name).join(", "),
+      team_hours: `${(user.weekdays ? user.weekdayEndHour - user.weekdayStartHour : 0) + (user.weekends ? user.weekendEndHour - user.weekdayStartHour : 0)} hours`,
+      team_experience: `${user.talent_work_experience} Months`,
+      team_certificates: ((user.talent_certificates as unknown[]) as CertificatesType[]).map((certificate) => certificate.name).join(", "),
     })
     return { success: true, data: res }
   } catch(e: unknown) {
@@ -75,6 +107,8 @@ export const getMilestones = async () => {
       return { success: false, data: e.toUpperCase() } // works, `e` narrowed to string
   } else if (e instanceof Error) {
       return { success: false, data: e.message } // works, `e` narrowed to Error
+  } else {
+      return { success: false, data: "UNKNOWN ERROR" } // fails, `e` still `unknown`
   }
-  }
+}
 }
