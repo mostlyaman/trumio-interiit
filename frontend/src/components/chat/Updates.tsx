@@ -17,7 +17,8 @@ import {
 import { useState } from "react";
 import type { Project } from "@prisma/client";
 import { api } from "~/utils/api";
-import { MomData } from "~/langchain/mom";
+import type { MomData } from "~/langchain/mom";
+import Loading from "../Loading";
 
 interface UpdateProps {
   project: Project;
@@ -65,67 +66,72 @@ export default function Updates({ project }: UpdateProps) {
               </div>
               <div className="overflow-hidden text-left text-sm font-medium">
                 {/* AI Response goes here. */}
-                <Tabs.Root
-                  className="w-[100%] overflow-hidden"
-                  defaultValue="account"
-                >
-                  <Tabs.List>
-                    {aiResponse.map((data, index) => {
-                      return (
-                        <>
-                          <Tabs.Trigger
-                            value={data.agenda}
-                            className="cursor-pointer"
-                          >
-                            {data.agenda}
-                          </Tabs.Trigger>
-                        </>
-                      );
-                    })}
-                  </Tabs.List>
+                {aiResponse.length !== 0 || generateMomMutation.isLoading ? generateMomMutation.isLoading ? (
+                 <div className="w-[100%] h-[300px] flex justify-center items-center gap-2 text-lg"> Fetching Minutes of Meeting <Loading className="scale-75" /></div>
+                ) : (
+                  <Tabs.Root
+                    className="w-[100%] overflow-hidden"
+                    defaultValue={aiResponse[0]?.agenda}
+                  >
+                    <Tabs.List>
+                      {aiResponse.map((data, index) => {
+                        return (
+                          <>
+                            <Tabs.Trigger 
+                              value={data.agenda}
+                              className="cursor-pointer"
+                            >
+                              {data.agenda}
+                            </Tabs.Trigger>
+                          </>
+                        );
+                      })}
+                    </Tabs.List>
 
-                  <Box px="4" pt="3" pb="2">
-                    {aiResponse.map((data, index) => {
-                      return (
-                        <>
-                          <Tabs.Content value={data.agenda}>
-                            <div className="flex gap-3 justify-between">
-                              <div>
-                                {data.key_points.map((key_point, index) => {
-                                  return (
-                                    <div
-                                      className="flex items-center gap-2"
-                                      key={key_point}
-                                    >
-                                      <Text size="2">{key_point}</Text>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                              <div>
-                                <div className="flex flex-col gap-3">
-                                  {data.action_items.map(
-                                    (action_item, index) => {
-                                      return (
-                                        <div
-                                          className="flex items-center gap-2"
-                                          key={action_item}
-                                        >
-                                          <Checkbox />
-                                          <Text size="2">{action_item}</Text>
-                                        </div>
-                                      );
-                                    },
-                                  )}
+                    <Box px="4" pt="3" pb="2">
+                      {aiResponse.map((data, index) => {
+                        return (
+                          <>
+                            <Tabs.Content value={data.agenda}>
+                              <div className="flex gap-3 w-[100%]">
+                                <ol className="flex flex-col gap-2 list-disc w-[50%]">
+                                  <div className="text-xl flex justify-center mb-3">Key Points</div>
+                                  {data.key_points.map((key_point, index) => {
+                                    return (
+                                      <li
+                                        key={key_point}
+                                      >
+                                        <Text size="2">{key_point}</Text>
+                                      </li>
+                                    );
+                                  })}
+                                </ol>
+                                <div className="w-[50%]">
+                                  <div className="flex flex-col gap-2">
+                                  <div className="text-xl flex justify-center mb-3">Action Items</div>
+                                    {data.action_items.map(
+                                      (action_item, index) => {
+                                        return (
+                                          <div
+                                            className="flex items-center gap-2"
+                                            key={action_item}
+                                          >
+                                               <input id="link-checkbox" type="checkbox" value="" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded "/>
+                                            <Text size="2">{action_item}</Text>
+                                          </div>
+                                        );
+                                      },
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </Tabs.Content>
-                        </>
-                      );
-                    })}
-                  </Box>
-                </Tabs.Root>
+                            </Tabs.Content>
+                          </>
+                        );
+                      })}
+                    </Box>
+                  </Tabs.Root>
+                ) : <div  className="w-[100%] h-[300px] flex justify-center items-center gap-2 text-lg">No Updates Found</div>}
               </div>
             </div>
           </div>
