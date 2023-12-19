@@ -215,6 +215,10 @@ export default function Home() {
             </div>
             {isPreview ? (
               <Preview milestones={milestones} />
+            ) : ai_milestones_mutation.isLoading ? (
+              <div className="flex h-[500px] gap-2 w-[100%] items-center justify-center">
+                Generating Milestones using AI <Loading className="scale-75" />
+              </div>
             ) : (
               <Addmilestone
                 setMiles={setMiles}
@@ -224,33 +228,37 @@ export default function Home() {
                 aiLoadingMutation={ai_milestones_mutation}
               />
             )}
-            <div className="flex items-center justify-between">
-              <div
-                className="flex cursor-pointer items-center gap-2 text-[#0065C1]"
-                onClick={() => {
-                  setPreview(false);
-                }}
-              >
-                <span className="rounded-full bg-[#D9E9F5] p-1">
-                  <ChevronLeftIcon />
-                </span>
-                Back
+            {ai_milestones_mutation.isLoading ? (
+              ""
+            ) : (
+              <div className="flex items-center justify-between">
+                <div
+                  className="flex cursor-pointer items-center gap-2 text-[#0065C1]"
+                  onClick={() => {
+                    setPreview(false);
+                  }}
+                >
+                  <span className="rounded-full bg-[#D9E9F5] p-1">
+                    <ChevronLeftIcon />
+                  </span>
+                  Back
+                </div>
+                <div
+                  className=" flex items-center justify-center"
+                  onClick={
+                    isPreview
+                      ? handleSubmit
+                      : () => {
+                          setPreview(true);
+                        }
+                  }
+                >
+                  <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
+                    Save & Continue <ChevronRightIcon />
+                  </span>
+                </div>
               </div>
-              <div
-                className=" flex items-center justify-center"
-                onClick={
-                  isPreview
-                    ? handleSubmit
-                    : () => {
-                        setPreview(true);
-                      }
-                }
-              >
-                <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
-                  Save & Continue <ChevronRightIcon />
-                </span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
