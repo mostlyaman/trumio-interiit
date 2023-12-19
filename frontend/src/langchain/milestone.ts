@@ -41,7 +41,7 @@ const prompt = PromptTemplate.fromTemplate(
 const parser = StructuredOutputParser.fromZodSchema(
   z.array(
     z.object({
-      title: z.string().describe("Title of the milestone"),
+      name: z.string().describe("Title of the milestone"),
       description: z.string().describe("Description of the work done in the milestone. Should be specific."),
       deliverables: z.array(
         z.string().describe("Component of the project to be submitted and verified to assess the completion of the deliverable"),
@@ -54,7 +54,7 @@ const parser = StructuredOutputParser.fromZodSchema(
 
 const chain = RunnableSequence.from([
   prompt,
-  new OpenAI(),
+  new OpenAI({ maxTokens: 1000  }),
   parser
 ])
 
@@ -74,7 +74,7 @@ interface CertificatesType {
 }
 
 interface MilestoneData {
-  title: string,
+  name: string,
   description: string,
   deliverables: string[],
   cost: number,
@@ -101,6 +101,7 @@ export const getMilestones = async (
       team_experience: `${user.talent_work_experience} Months`,
       team_certificates: ((user.talent_certificates as unknown[]) as CertificatesType[]).map((certificate) => certificate.name).join(", "),
     })
+    console.log(1, res)
     return { success: true, data: res }
   } catch(e: unknown) {
     if (typeof e === "string") {
