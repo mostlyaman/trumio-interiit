@@ -10,6 +10,8 @@ import { EyeOpenIcon, StarIcon } from "@radix-ui/react-icons";
 const mont = Montserrat({ subsets: ["latin"] });
 import { useEffect } from "react";
 import Loading from "~/components/Loading";
+import { useRouter } from "next/router";
+import { useUser } from "@clerk/nextjs";
 
 const TruncatedDescription = ({ description }: { description: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -45,6 +47,7 @@ const TruncatedDescription = ({ description }: { description: string }) => {
 export default function Home() {
   const router = useRouter()
   const projectId = router.query.projectId
+  const user = useUser()
 
   const { data: res, isLoading, isSuccess, isError } = api.project.getBids.useQuery({
     projectId

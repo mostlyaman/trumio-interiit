@@ -13,8 +13,6 @@ import { api } from "~/utils/api";
 import Loading from "~/components/Loading";
 import Link from "next/link";
 import type { Project } from "@prisma/client";
-import { useProjectStore } from "../../store/ProjectStore";
-import { useBidStore } from "~/store/BidStore";
 import Breadcrumbs from "~/components/Breadcrumbs";
 
 const mont = Montserrat({ subsets: ["latin"] });
@@ -27,7 +25,7 @@ enum MarketPlaceEnum {
 }
 
 export default function Home() {
-  const { data, isLoading } = api.project.getProjects.useQuery();
+  const { data, isSuccess } = api.project.getProjects.useQuery();
   console.log({"proj":data})
 
   const [selectedStatus, setSelectedStatus] = useState<MarketPlaceEnum>(
@@ -36,7 +34,7 @@ export default function Home() {
 
   const [modal, setModal] = useState(false);
   const [bid, setBid] = useState(false);
-  const [currentProj,setCurrentProj] = useState<Project | undefined>()
+  const [currentProj,setCurrentProj] = useState<Project>()
 
   const handleClick = (val: MarketPlaceEnum) => {
     setSelectedStatus(val);
@@ -194,12 +192,14 @@ export default function Home() {
             <InlineForm />
           </div>
           <div className="flex cursor-pointer flex-col justify-center gap-5">
-            {isLoading ? (
-              <div className="flex h-[50vh] w-[100%] items-center justify-center">
-                <Loading className="" />
-              </div>
-            ) : selectedStatus === MarketPlaceEnum.ALLLISTINGS ? (
-              data?.map((value) => {
+            {
+              !data ? 
+                <div className="flex h-[50vh] w-[100%] items-center justify-center">
+                  <Loading className="" />
+                </div>
+             : 
+             selectedStatus === MarketPlaceEnum.ALLLISTINGS ? (
+              data.map((value) => {
                 console.log({"dd":value})
                 return (
                   <>
@@ -221,7 +221,7 @@ export default function Home() {
                 );
               })
             ) : (
-              data?.map((value) => {
+              data.map((value) => {
                 const found = bid_proj?.bids.find((item) => {
                   if (item.projectId === value.id) return true;
                 });
@@ -388,34 +388,16 @@ const DialogDemo = ({
   setCurrentProj,
   bid,
 }: {
-  modal: boolean;
-  setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  proj: Project | undefined;
-  bid: boolean;
-  setBidUser: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>;
+  modal: boolean,
+  setModal: React.Dispatch<React.SetStateAction<boolean>>,
+  proj: Project,
+  bid: boolean,
+  setBidUser: React.Dispatch<React.SetStateAction<boolean>>,
+  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>
 }) => {
   
-  const { setProject,resetProject } = useProjectStore();
-  const { setBid } = useBidStore();
   const HandleClick = () => {
-    resetProject()
-    setProject(proj);
-    setCurrentProj(undefined)
-    setBid({
-      bid_data: {
-        start_date: new Date(),
-        milestones: [
-          {
-            name: "MileStone 1",
-            description: "",
-            duration: 0,
-            cost: 0,
-            deliverables: "Deliverable 1",
-          },
-        ],
-      },
-    });
+
   };
   return (
     <Dialog.Root open={modal}>
@@ -547,7 +529,7 @@ const DialogDemo = ({
                     {!bid && (
                       <Link
                         onClick={HandleClick}
-                        href="/create-bid"
+                        href={`/create-bid/${proj?.id}`}
                         className="mr-5 mt-5 flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400"
                       >
                         Create Bid <RightIcon />
@@ -623,9 +605,9 @@ const ProjectComp = ({
   setModal,
   setCurrentProj
 }: {
-  proj: Project | undefined;
-  setModal: React.Dispatch<React.SetStateAction<boolean>>;
-  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>;
+  proj: Project,
+  setModal: React.Dispatch<React.SetStateAction<boolean>>,
+  setCurrentProj: React.Dispatch<React.SetStateAction<Project | undefined>>,
 }) => {
   const HandleClick = () => {
     setModal(true);
@@ -697,15 +679,18 @@ const ProjectComp = ({
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
                 <span>
-                  <Avatar
-                    radius="full"
-                    fallback="A"
-                    size="3"
-                    src={`${user?.imageUrl}`}
-                  />
+                  {
+                    user ?
+                    <Avatar
+                      radius="full"
+                      fallback="A"
+                      size="3"
+                      src={`${user?.imageUrl}`}
+                    /> : null
+                  }
                 </span>
                 <div className="flex flex-col">
-                  <span>{`${user?.firstName} ${user?.lastName}`}</span>
+                  <span>{user ? `${user?.firstName} ${user?.lastName}`: null}</span>
                 </div>
               </div>
               {proj?.skills?.length ? (
@@ -845,15 +830,19 @@ const MyBidComp = ({
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
                 <span>
-                  <Avatar
-                    radius="full"
-                    fallback="A"
-                    size="3"
-                    src={`${user?.imageUrl}`}
-                  />
+                  {
+                    user ?
+                    <Avatar
+                      radius="full"
+                      fallback="A"
+                      size="3"
+                      src={`${user?.imageUrl}`}
+                    />
+                    : null
+                  }
                 </span>
                 <div className="flex flex-col">
-                  <span>{`${user?.firstName} ${user?.lastName}`}</span>
+                  <span>{user ? `${user?.firstName} ${user?.lastName}`: null}</span>
                 </div>
               </div>
               {proj?.skills?.length ? (

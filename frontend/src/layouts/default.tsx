@@ -3,10 +3,7 @@ import * as React from 'react';
 import { Montserrat } from 'next/font/google'
 import { useAuth } from "@clerk/nextjs";
 import { useUserStore } from "~/store/UserStore";
-import Loading from "~/components/Loading";
 import { api } from "~/utils/api";
-import { useProjectStore } from "~/store/ProjectStore";
-import { useBidStore } from "~/store/BidStore";
 import { useRouter } from "next/router";
 
 interface LayoutProps {
@@ -19,29 +16,21 @@ export default function Layout({ children }: LayoutProps) {
 
   const { user, setUser } = useUserStore()
   const { isSignedIn } = useAuth()
-  const { resetProject } = useProjectStore()
-  const { resetBid } = useBidStore()
   const router = useRouter()
   const { data, isLoading } = api.user.getUser.useQuery({}, { enabled: !user && isSignedIn })
+  
   React.useEffect(() => {
     console.log(data?.role)
-    if(data?.role === "null") router.push('/auth')
+    if(data?.role === "null") router.push('/auth').catch((err) => console.log(err))
     if(data && !user) {
       setUser(data)
     }
   },[data,user])
 
-  React.useEffect(() => {
-    if(router.pathname !== '/create-bid' && router.pathname !== '/bid') {
-      resetBid()
-      resetProject()
-    }
-  }, [resetBid, resetProject, router])
-
   return (
     <>
       {router.pathname === '/auth'?"":<Navbar />}
-      <div className={`min-h-[100vh] ${router.pathname === '/auth'?"":"pt-[7vh]"} bg-gray-100 overflow-scroll" + mont.className`}>
+      <div className={`min-h-[100vh] ${router.pathname === '/auth'?"":"pt-[7vh]"} bg-gray-100 overflow-scroll" + ${mont.className}`}>
         {children}
       </div> 
       {/* {

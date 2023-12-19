@@ -35,18 +35,6 @@ services:
     # environment:
     volumes:
       - ./frontend:/app
-
-  python:
-    build: ./backend
-    container_name: python
-    depends_on:
-      - chroma
-      - nextjs
-    volumes:
-      - ./backend:/app
-    environment:
-      - CHROMA_HOST=chroma
-      - CHROMA_PORT=8000
     
   chroma:
     image: ghcr.io/chroma-core/chroma:latest

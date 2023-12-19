@@ -315,13 +315,13 @@ const ProfileSection = () => {
                 htmlFor="year"
                 className="text-md mb-2 block  pl-1 font-medium text-gray-900 "
               >
-                Title <span className="text-red-500">*</span>
+                Job Title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="text"
                 className="dark block w-full rounded-lg border border-gray-300  bg-gray-50 p-2.5 text-sm text-gray-900"
-                placeholder="Enter title"
+                placeholder="Enter job title"
               />
             </div>
           </div>

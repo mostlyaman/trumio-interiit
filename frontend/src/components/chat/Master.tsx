@@ -1,29 +1,29 @@
 import {
   ChatBubbleIcon,
   ExclamationTriangleIcon,
-  MagnifyingGlassIcon,
+  StarFilledIcon,
 } from "@radix-ui/react-icons";
-import type { Project } from "@prisma/client";
 import { CodeIcon, GitHubLogoIcon } from "@radix-ui/react-icons";
 import {
   Button,
-  Flex,
   Popover,
   TextField,
-  Card,
-  Text,
   Callout,
 } from "@radix-ui/themes";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { api } from "~/utils/api";
 import type { ProjectWithGithubRepos } from "~/pages/chat";
+import type { MasterAIChat, UpdateChat } from "./types";
+import { DateTime } from 'luxon'
+
 interface MasterAIProps {
-  project: ProjectWithGithubRepos;
+  project: ProjectWithGithubRepos,
+  masterAIChats: MasterAIChat[]
 }
 
-export default function MasterAI({ project }: MasterAIProps) {
+export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
   const [githubInput, setGithubInput] = useState<string>("");
-
   const { isLoading, mutate, error } = api.project.addGithubRepo.useMutation();
 
   function extractUsernameAndRepo(url: string) {
@@ -50,7 +50,7 @@ export default function MasterAI({ project }: MasterAIProps) {
 
   return (
     <>
-      <div className="ml-4 mt-4 w-[75%] rounded-2xl bg-white shadow-xl">
+      <div className="ml-4 mt-4 w-[75%] rounded-2xl bg-white shadow-xl h-[80vh] relative">
         <div className="flex h-[80px] w-full flex-col justify-center border-b border-gray-200 px-4 py-2">
           <div className="flex flex-row items-center justify-between gap-3">
             <div className="flex flex-row items-center gap-3">
@@ -183,7 +183,116 @@ export default function MasterAI({ project }: MasterAIProps) {
             </div>
           </div>
         </div>
+        <div className="absolute bottom-0 flex flex-col flex-grow w-full max-h-[100%]">
+          <div className="flex flex-col flex-grow gap-3 h-full w-full px-10">
+            {
+
+              masterAIChats.map((el: MasterAIChat) => ({ ...el, created_at: DateTime.fromISO(el.created_at) }))
+              .map((el, index, arr) => {
+                const showDate = index === 0 || (
+                  el.created_at !== arr[index-1]?.created_at
+                )
+                return (
+                  <PromptWrapper key={el.id} el={el} showDate={ showDate } />
+                )
+              }
+              )
+            }
+          </div>
+          <div className=" w-full order-t border-slate-300 flex flex-row px-5 py-4 gap-4">
+            <textarea placeholder="Type a question here." name="" id="" rows={1} className="text-lg bg-sky-200 bg-opacity-20 outline-none p-2 flex flex-grow resize-none rounded-lg border border-sky-500 font-medium text-">
+
+            </textarea>
+            <div className="flex justify-center items-center px-4 bg-sky-400 text-white rounded-lg">
+              Ask
+            </div>
+          </div>
+        </div>
       </div>
     </>
   );
+}
+
+const PromptWrapper = ({ el, showDate }: { el: Omit<MasterAIChat, 'created_at'> & { created_at: DateTime }, showDate: boolean }) => {
+  return (
+    <div>
+      {
+        showDate ? 
+        <div className="flex flex-grow items-center justify-center border-b border-gray-400">
+          { el.created_at ? el.created_at.toLocaleString(DateTime.DATE_MED) : 'Invalid Date' }
+        </div> : null
+      }
+      {
+        el.type === 'user' ? <UserPrompt key={el.id} prompt={el.data} /> :
+        el.type === 'system' ? <SystemPrompt key={el.id} prompt={el.data} /> : 
+        el.type === 'resource' ? <ResourcePrompt key={el.id} prompt={el.data} user={el.user} /> : 
+        el.type === 'milestone' ? <MilestonePrompt key={el.id} prompt={el.data} /> : 
+        el.type === 'payment' ? <PaymentPrompt key={el.id} prompt={el.data} user={el.user} /> : 
+        null
+      }
+    </div>
+  )
+}
+
+const UserPrompt = ({ prompt }: { prompt: string, }) => {
+  return (
+    <div className="flex max-w-[60%] self-end">
+      <div className=" bg-sky-500 rounded-lg text-white p-2 font-medium">
+        { prompt }
+      </div>
+    </div>
+  )
+}
+
+const SystemPrompt = ({ prompt }: { prompt: string, }) => {
+  return (
+    <div className="flex max-w-[60%] self-start">
+      <div className="bg-slate-400 rounded-lg text-white p-2 font-medium">
+        { prompt }
+      </div>
+    </div>
+  )
+}
+
+const ResourcePrompt = ({ prompt, user,  }: { prompt: string, user: { name: string, profilePicture: string }, }) => {
+  return (
+    <div className="flex gap-2 self-center justify-center items-center max-w-[60%] font-medium">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={user.profilePicture || "https://img.freepik.com/premium-vector/user-profile-icon-flat-style-member-avatar-vector-illustration-isolated-background-human-permission-sign-business-concept_157943-15752.jpg?w=826"} alt="" width={40} height={40} />
+      <div>
+        { user.name }
+      </div>
+      <div>-</div>
+      <div className="p-2 text-sky-500 underline">
+        { prompt }
+      </div>
+    </div>
+  )
+}
+
+const MilestonePrompt = ({ prompt }: { prompt: string, }) => {
+  return (
+    <div className="flex justify-center gap-3 items-center max-w-[60%] self-center">
+      <StarFilledIcon className="scale-[1.15]" />
+      <div className="font-medium flex items-center">
+        { prompt }
+      </div>
+    </div>
+  )
+}
+
+const PaymentPrompt = ({ prompt, user, }: { prompt: string, user: { name: string, profilePicture: string }, }) => {
+  return (
+    <div className="flex gap-2 self-center justify-center items-center max-w-[60%] font-medium">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={user.profilePicture || "https://img.freepik.com/premium-vector/user-profile-icon-flat-style-member-avatar-vector-illustration-isolated-background-human-permission-sign-business-concept_157943-15752.jpg?w=826"} alt="" width={40} height={40} />
+      <div>
+        { user.name }
+      </div>
+      <div>-</div>
+      <div className="p-2 underline text-gray-600">
+        { prompt }
+      </div>
+    </div>
+  )
 }

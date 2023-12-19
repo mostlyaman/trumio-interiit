@@ -6,6 +6,7 @@ import '@radix-ui/themes/styles.css';
 import "~/styles/globals.css";  
 import Head from "next/head";
 import Layout from "~/layouts/default";
+import dynamic from "next/dynamic";
 
 
 
@@ -29,5 +30,9 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   )
 };
 
-export default api.withTRPC(MyApp);
+const AppWithNoSSR = dynamic(() => Promise.resolve(MyApp), {
+  ssr: false
+})
+
+export default api.withTRPC(AppWithNoSSR);
 

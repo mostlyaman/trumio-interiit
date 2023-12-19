@@ -5,15 +5,16 @@ import WatchIcon from "~/components/icons/WatchIcon";
 import TickIcon from "~/components/icons/TickIcon";
 import InfoIcon from "~/components/icons/InfoIcon";
 import RightIcon from "~/components/icons/RightIcon";
-import { ChevronLeftIcon, PlusIcon } from "@radix-ui/react-icons";
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ClockIcon, Link2Icon, PlusIcon, StarFilledIcon } from "@radix-ui/react-icons";
 import { useEffect, useState } from "react";
-import { useProjectStore } from "~/store/ProjectStore";
 import { Montserrat } from "next/font/google";
 import { useRouter } from "next/router";
-import { Milestone } from "~/store/BidStore";
-import { useBidStore } from "~/store/BidStore";
-const mont = Montserrat({ subsets: ["latin"] });
 import { api } from "~/utils/api";
+import { useUser } from "@clerk/nextjs";
+import * as uuid from 'uuid';
+
+const mont = Montserrat({ subsets: ["latin"] });
+
 
 const TruncatedDescription = ({ description }: { description: string }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -48,70 +49,32 @@ const TruncatedDescription = ({ description }: { description: string }) => {
 };
 
 export default function Home() {
-  const { bid, setBid, resetBid } = useBidStore();
   const [isPreview, setPreview] = useState<boolean>(false);
-  const [milestones, setMiles] = useState<Milestone[]>(
-    bid?.bid_data.milestones,
-  );
-
+  const [milestones, setMiles] = useState<MilestoneSchema[]>([]);
   const [startDate,setStartDate] = useState<Date>(new Date())
 
-  const { project,resetProject } = useProjectStore();
+  const router = useRouter()
+  if(typeof router.query.projectId != 'string') {
+    router.push('/marketplace').catch((err) => console.error(err))
+  }
+  const { data: project, isLoading } = api.project.getProject.useQuery({ projectId: router.query.projectId as string })
 
-  const router = useRouter();
+  const createBidMutation = api.project.createBid.useMutation();
 
-  useEffect(() => {
-    if (!project) {
-      router.push("/marketplace");
-    }
-  }, [project, router]);
-
-  const handleClick = () => {
-    setPreview((prev) => !prev);
-    console.log()
-    resetBid();
-    setBid({
-      bid_data: {
-        start_date: startDate,
-        milestones: milestones,
-      },
-    });
-  };
-
-  const { mutate } = api.project.createBid.useMutation();
+  const user = useUser()
 
   const handleSubmit = () => {
-    const userId = 'your_user_id';
-    const bidData = bid.bid_data;
-    console.log(typeof(bidData))
-    console.log(bidData)
-    resetProject()
-
     try {
-      const result = mutate({
-        userID: userId,
-        bid_data: bidData,
-        projectId: project?.id
-      })
+      if(project) {
+        createBidMutation.mutate({
+          bid_data: { milestones: milestones, start_date: startDate },
+          projectId: project.id
+        })
+      }
     } catch (error) {
       console.error('Error creating bid:', error);
     }
   };
-
-  const { data } = api.project.getMyProjects.useQuery();
-  let user;
-  const project1 = data?.projects?.find(
-    (proje) => proje?.id === project?.id,
-  );
-  if (project1) {
-    const clientTeamMember = project1.team_members.find(
-      (member) => member.role === "null",
-    );
-    console.log(clientTeamMember?.id);
-    if (clientTeamMember) {
-      user = data?.users.get(clientTeamMember?.id);
-    }
-  }
 
   return (
     <>
@@ -134,14 +97,21 @@ export default function Home() {
             <div>{project?.project_name}</div>
             <div className="mt-2 flex items-center gap-3">
               <span className="pt-2">
-                <Avatar radius="full" fallback="A" size="2" src={user?.imageUrl}/>
+                {
+                  !user.user?.imageUrl ? null :
+                  <Avatar radius="full" fallback="A" size="2" src={user.user.imageUrl}/>
+                }
               </span>
               <div className="flex flex-col">
-                <div>{user?.firstName} {user?.lastName} </div>
+                <div>
+                  {
+                    !user.user ? null : `${user.user.firstName} ${user.user.lastName}`
+                  } 
+                </div>
                 <div className="flex items-center gap-2 text-xs ">
                   <span className="flex items-center rounded-md bg-[#FFEDE0] px-2 py-[2px]">
                     <span className="text-[#FF9F43]">
-                      <StarIcon />
+                      <StarFilledIcon />
                     </span>
                     <span>5</span>
                   </span>
@@ -165,7 +135,7 @@ export default function Home() {
                 </span>
               </div>
               <span className="flex items-center">
-                <AttachIcon /> <span>1</span>
+                <Link2Icon /> <span>1</span>
               </span>
             </div>
             <div className="flex flex-col gap-1 text-xs ">
@@ -194,7 +164,7 @@ export default function Home() {
             <div className="flex gap-5">
               <div className="flex items-center gap-4 text-[#2495E6]">
                 <span className="rounded-md bg-[#D9E9F5] p-3">
-                  <WatchIcon />
+                  <ClockIcon />
                 </span>
                 <div className="flex flex-col text-sm">
                   <span className="font-semibold">Milestone</span>
@@ -203,7 +173,7 @@ export default function Home() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="rounded-md bg-[#ECECEC] p-3 text-[#757575]">
-                  <TickIcon />
+                  <CheckIcon />
                 </span>
                 <div className="flex flex-col text-sm">
                   <span>Preview</span>
@@ -224,7 +194,7 @@ export default function Home() {
             <div className="flex items-center justify-between">
               <div
                 className="flex cursor-pointer items-center gap-2 text-[#0065C1]"
-                onClick={handleClick}
+                onClick={()=>{ setPreview(false) }}
               >
                 <span className="rounded-full bg-[#D9E9F5] p-1">
                   <ChevronLeftIcon />
@@ -233,10 +203,10 @@ export default function Home() {
               </div>
               <div
                 className=" flex items-center justify-center"
-                onClick={(isPreview?handleSubmit:handleClick)}
+                onClick={isPreview ? handleSubmit: (()=>{ setPreview(true) })}
               >
                 <span className="flex cursor-pointer items-center gap-2 rounded-lg bg-[#0065C1] px-5 py-2 text-white shadow-md hover:shadow-blue-400">
-                   Save & Continue <RightIcon />
+                   Save & Continue <ChevronRightIcon />
                 </span>
               </div>
             </div>
@@ -248,163 +218,20 @@ export default function Home() {
 }
 
 function MilesStonesComp({
-  name,
   index,
   setMiles,
-  milestones,
+  milestone,
 }: {
-  name: string;
   index: number;
-  setMiles: React.Dispatch<React.SetStateAction<Milestone[]>>;
-  milestones: Milestone[];
+  setMiles: (newMilstone: MilestoneSchema) => void;
+  milestone: MilestoneSchema;
 }) {
-  const [duration, setDuration] = useState<number | undefined>(
-    milestones[index]?.duration,
-  );
-  const [cost, setCost] = useState<number | undefined>(milestones[index]?.cost);
-  const [milename, setMilename] = useState<string | undefined>(
-    milestones[index]?.name,
-  );
-  const [desc, setDesc] = useState<string | undefined>(
-    milestones[index]?.description,
-  );
-  const [deliverable, setDeliverable] = useState<string | undefined>(
-    milestones[index]?.deliverables,
-  );
 
-  useEffect(() => {
-    if (!milestones[index]) {
-      setMiles((prevMilestones) => {
-        const updatedMilestones = [...prevMilestones];
-        if (!updatedMilestones[index]) {
-          updatedMilestones[index] = {
-            name: "",
-            description: "",
-            duration: 0,
-            cost: 0,
-            deliverables: "",
-          };
-        }
-        return updatedMilestones;
-      });
-    } else {
-      setDuration(milestones[index]?.duration);
-    }
-  }, []);
-
-  const handleDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    setDuration(value);
-
-    setMiles((prevMilestones) => {
-      const updatedMilestones = [...prevMilestones];
-      if (!updatedMilestones[index]) {
-        updatedMilestones[index] = {
-          name: name,
-          description: "",
-          duration: value,
-          cost: 0,
-          deliverables: "",
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          duration: value,
-        };
-      }
-      return updatedMilestones;
-    });
-  };
-  const handleCostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value);
-    setCost(value);
-    setMiles((prevMilestones) => {
-      const updatedMilestones = [...prevMilestones];
-      if (!updatedMilestones[index]) {
-        updatedMilestones[index] = {
-          name: "",
-          description: "",
-          duration: value,
-          cost: 0,
-          deliverables: "",
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          cost: value,
-        };
-      }
-      return updatedMilestones;
-    });
-  };
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMilename(e.target.value);
-    setMiles((prevMilestones) => {
-      const updatedMilestones = [...prevMilestones];
-      if (!updatedMilestones[index]) {
-        updatedMilestones[index] = {
-          name: e.target.value,
-          description: "",
-          duration: 0,
-          cost: 0,
-          deliverables: "",
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          name: e.target.value,
-        };
-      }
-      return updatedMilestones;
-    });
-  };
-  const handleDescChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setDesc(e.target.value);
-    setMiles((prevMilestones) => {
-      const updatedMilestones = [...prevMilestones];
-      if (!updatedMilestones[index]) {
-        updatedMilestones[index] = {
-          name: "",
-          description: e.target.value,
-          duration: 0,
-          cost: 0,
-          deliverables: "",
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          description: e.target.value,
-        };
-      }
-      return updatedMilestones;
-    });
-  };
-  const handleDeliverablesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDeliverable(e.target.value);
-    setMiles((prevMilestones) => {
-      const updatedMilestones = [...prevMilestones];
-      if (!updatedMilestones[index]) {
-        updatedMilestones[index] = {
-          name: "",
-          description: "",
-          duration: 0,
-          cost: 0,
-          deliverables: e.target.value,
-        };
-      } else {
-        updatedMilestones[index] = {
-          ...updatedMilestones[index],
-          deliverables: e.target.value,
-        };
-      }
-      return updatedMilestones;
-    });
-  };
   return (
     <>
       <div className="mt-5 flex flex-col justify-between gap-5 rounded-md bg-[#FFFFFF] p-4 shadow-md">
         <div className="flex w-[100%] justify-between">
-          <span>{name}</span>
+          <span>Milestone-{index+1}</span>
           <div className="flex gap-2 text-sm">
             <div className="flex flex-col gap-3">
               <span>
@@ -414,8 +241,8 @@ function MilesStonesComp({
                 <input
                   type="number"
                   name="duration"
-                  value={duration ?? ""}
-                  onChange={handleDurationChange}
+                  value={milestone.duration}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, duration: parseInt((e.target as HTMLInputElement).value) })}}
                   placeholder="Enter"
                   id="date"
                   className=" rounded-md border px-2 py-2"
@@ -433,8 +260,8 @@ function MilesStonesComp({
                   type="number"
                   name="talent cost"
                   placeholder="Enter"
-                  value={cost ?? ""}
-                  onChange={handleCostChange}
+                  value={milestone.cost}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, cost: parseInt((e.target as HTMLInputElement).value) })}}
                   id="date"
                   className=" rounded-md border px-2 py-2"
                   required
@@ -457,8 +284,8 @@ function MilesStonesComp({
                   id="first_name"
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter name"
-                  value={milename ?? ""}
-                  onChange={handleNameChange}
+                  value={milestone.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => { setMiles({ ...milestone, name: (e.target as HTMLInputElement).value })}}
                   minLength={4}
                   required
                 />
@@ -469,8 +296,8 @@ function MilesStonesComp({
                 </label>
                 <textarea
                   id="message"
-                  value={desc ?? ""}
-                  onChange={handleDescChange}
+                  value={milestone.description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setMiles({ ...milestone, description: (e.target as HTMLTextAreaElement).value })}}
                   rows={4}
                   className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm"
                   placeholder="Enter description in 500 characters"
@@ -480,22 +307,46 @@ function MilesStonesComp({
           </div>
           <div className="flex h-[max-content] flex-grow flex-col gap-3 rounded-md p-4 shadow-md">
             <div>Deliverable Details</div>
-            <input
-              type="text"
-              id="deliverable"
-              className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-              placeholder="Enter deliverable"
-              minLength={4}
-              value={deliverable ?? ""}
-              onChange={handleDeliverablesChange}
-              required
-            />
-            <div className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]">
+            {
+              milestone.deliverables.map((deliverable, deliverableIndex) =>
+                <input
+                  type="text"
+                  key={deliverable.id}
+                  id="deliverable"
+                  className=" mt-5 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter deliverable"
+                  minLength={4}
+                  value={deliverable.text}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setMiles({
+                      ...milestone,
+                      deliverables: milestone.deliverables.map((oldDeliverable, oldDeliverableIndex) => {
+                        if(oldDeliverableIndex !== deliverableIndex) {
+                          return oldDeliverable
+                        } else {
+                          return { id: oldDeliverable.id, text: (e.target as HTMLInputElement).value }
+                        }
+                      })
+                    })
+                  }}
+                  required
+                />
+              )
+            }
+            <button onClick={() => {
+              setMiles({
+                ...milestone,
+                deliverables: [
+                  ...milestone.deliverables,
+                  { id: uuid.v4(), text: "" }
+                ]
+              })
+            }} className="mt-3 flex cursor-pointer items-center gap-2 text-[#0065C1]">
               <span className="rounded-full bg-[#E0F0FC] p-2">
                 <PlusIcon />
               </span>
               <span>Add Deliverable</span>
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -508,8 +359,8 @@ const Addmilestone = ({
   setStartDate,
   startDate
 }: {
-  setMiles: React.Dispatch<React.SetStateAction<Milestone[]>>;
-  milestones: Milestone[];
+  setMiles: React.Dispatch<React.SetStateAction<MilestoneSchema[]>>;
+  milestones: MilestoneSchema[];
   startDate:Date
   setStartDate:React.Dispatch<React.SetStateAction<Date>>
 }) => {
@@ -519,21 +370,21 @@ const Addmilestone = ({
     setStartDate(date)
   }
   const handleAdd = () => {
-    setMiles((prev) => [
-      ...prev,
+    setMiles([
+      ...milestones,
       {
+        id: uuid.v4(),
         name: "",
         description: "",
-        duration: 0,
         cost: 0,
-        deliverables: "",
-      },
+        duration: 0,
+        deliverables: [],
+      }
     ]);
   };
-  const {bid} = useBidStore()
   
-  const estimated_duration = bid.bid_data.milestones.reduce((total, item) => total + (item.duration?item.duration:0), 0);
-  const cost_net = bid.bid_data.milestones.reduce((total, item) => total + (item.cost?item.cost:0), 0);
+  const estimated_duration = milestones.reduce((total, item) => total + item.duration, 0)
+  const cost_net = milestones.reduce((total, item) => total + item.cost, 0);
 
   return (
     <>
@@ -571,15 +422,22 @@ const Addmilestone = ({
         </div>
         {milestones.map((value,index) => {
           return (
-            <>
               <MilesStonesComp
-                milestones={milestones}
-                key={index}
-                name={`Milestone-${index + 1}`}
+                milestone={value}
+                key={value.id}
                 index={index}
-                setMiles={setMiles}
+                setMiles={(newMilstone) => {
+                  setMiles(
+                    milestones.map((oldMilestones, oldMilestonesIndex) => {
+                      if(index !== oldMilestonesIndex) {
+                        return oldMilestones
+                      } else {
+                        return newMilstone
+                      }
+                    })
+                  )
+                }}
               />
-            </>
           );
         })}
         <div
@@ -639,10 +497,9 @@ const Addmilestone = ({
     </>
   );
 };
-const Preview = ({ milestones }: { milestones: Milestone[] }) => {
-  const { bid } = useBidStore();
-  const estimated_duration = bid.bid_data.milestones.reduce((total, item) => total + (item.duration?item.duration:0), 0);
-  const cost_net = bid.bid_data.milestones.reduce((total, item) => total + (item.cost?item.cost:0), 0);
+const Preview = ({ milestones }: { milestones: MilestoneSchema[] }) => {
+  const estimated_duration = milestones.reduce((total, item) => total + item.duration, 0);
+  const cost_net = milestones.reduce((total, item) => total + item.cost, 0);
   return (
     <>
       <div className="flex flex-col gap-5">

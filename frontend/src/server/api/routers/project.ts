@@ -1,21 +1,13 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import type { User } from "@clerk/nextjs/server";
-
 import {
   createTRPCRouter,
   privateProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
 import { clerkClient } from "@clerk/nextjs/server";
-
-const MilestoneSchema = z.object({
-  name: z.string().optional(),
-  description: z.string(),
-  duration: z.number(),
-  cost: z.number(),
-  deliverables: z.string(),
-});
+import { getMilestones } from "~/langchain/milestone";
 
 export const projectRouter = createTRPCRouter({
   hello: publicProcedure
@@ -30,6 +22,16 @@ export const projectRouter = createTRPCRouter({
     .input(z.object({}).nullish())
     .query(async ({ ctx: { userId, db } }) => {
       return await db.project.findMany();
+    }),
+  
+  getProject: privateProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx: { userId, db }, input: { projectId }}) => {
+      return await db.project.findUnique({
+        where: {
+          id: projectId
+        }
+      });
     }),
 
   getMyProjects: privateProcedure
@@ -71,9 +73,22 @@ export const projectRouter = createTRPCRouter({
   createBid: privateProcedure
     .input(
       z.object({
-        userID: z.string(),
         bid_data: z.object({
-          milestones: z.array(MilestoneSchema),
+          milestones: z.array(
+            z.object({
+              id: z.string(),
+              name: z.string(),
+              description: z.string(),
+              duration: z.number(),
+              cost: z.number(),
+              deliverables: z.array(
+                z.object({
+                  id: z.string(),
+                  text: z.string()
+                })
+              )
+            })
+          ),
           start_date: z.date(),
         }),
         projectId:z.string()
@@ -231,5 +246,5 @@ export const projectRouter = createTRPCRouter({
             }
           }
         })
-      })
+      }),
 });

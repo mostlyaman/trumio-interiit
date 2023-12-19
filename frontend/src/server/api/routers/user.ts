@@ -29,14 +29,30 @@ export const userRouter = createTRPCRouter({
     }),
 
   updateUserRole: privateProcedure
-    .input(z.object({text: z.string()}))
+    .input(z.object({text: z.enum(["client", "talent"])}))
     .mutation(async ({ ctx: { db, userId },input }) => {
       const user = await db.user.update({
         where: { id: userId },
         data:{
-          role:input.text
+          role: input.text
         }
       });
       return user
+    }),
+
+  updateTalentProfile: privateProcedure
+    .input(z.object({
+      tagline: z.string(),
+      workExperience: z.number(),
+      introduction: z.string(),
+      job_title: z.string()
+    }))
+    .mutation(async ({ ctx: { db, userId }, input }) => {
+      const user = await db.user.update({
+        where: { id: userId },
+        data: {
+        }
+      })
     })
+
 });

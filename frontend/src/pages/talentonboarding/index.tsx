@@ -345,13 +345,13 @@ const ProfileSection = () => {
                 htmlFor="email"
                 className="text-md mb-2 block  pl-1 font-medium text-gray-900 "
               >
-                Role <span className="text-red-500">*</span>
+                Job title <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 id="text"
                 className="dark block w-full rounded-lg border border-gray-300  bg-gray-50 p-2.5 text-sm text-gray-900"
-                placeholder="Enter role"
+                placeholder="Enter job title"
               />
             </div>
           </div>
