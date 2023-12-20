@@ -48,7 +48,7 @@ const SearchableDropdown = ({ options, setDropdowni, dropdowni, text }: Searchab
         placeholder={text} 
         onInputChange={handleInputChange} 
         isClearable
-        // value={dropdowni}
+        value={dropdowni}
       />
     </div>
   );

@@ -101,7 +101,6 @@ export const getMilestones = async (
       team_experience: `${user.talent_work_experience} Months`,
       team_certificates: ((user.talent_certificates as unknown[]) as CertificatesType[]).map((certificate) => certificate.name).join(", "),
     })
-    console.log(1, res)
     return { success: true, data: res }
   } catch(e: unknown) {
     if (typeof e === "string") {

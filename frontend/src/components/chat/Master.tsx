@@ -16,15 +16,19 @@ import { api } from "~/utils/api";
 import type { ProjectWithGithubRepos } from "~/pages/chat";
 import type { MasterAIChat, UpdateChat } from "./types";
 import { DateTime } from 'luxon'
+import Loading from "../Loading";
 
 interface MasterAIProps {
   project: ProjectWithGithubRepos,
-  masterAIChats: MasterAIChat[]
+  masterAIChats: MasterAIChat[],
+  askQuery: (projectId: string, query: string) => Promise<void>,
 }
 
-export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
+export default function MasterAI({ project, masterAIChats, askQuery }: MasterAIProps) {
   const [githubInput, setGithubInput] = useState<string>("");
   const { isLoading, mutate, error } = api.project.addGithubRepo.useMutation();
+
+  const [query, setQuery] = useState<string>("")
 
   function extractUsernameAndRepo(url: string) {
     const parts = url.split("/");
@@ -81,8 +85,7 @@ export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
                     <div className="mb-4">
                       {project.github_repos.map((data) => {
                         return (
-                          <>
-                            <TextField.Root>
+                            <TextField.Root key={data.id}>
                               <TextField.Slot>
                                 <GitHubLogoIcon />
                               </TextField.Slot>
@@ -91,7 +94,6 @@ export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
                                 value={`${data.username}/${data.repo}`}
                               />
                             </TextField.Root>
-                          </>
                         );
                       })}
                     </div>
@@ -184,13 +186,13 @@ export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
           </div>
         </div>
         <div className="absolute bottom-0 flex flex-col flex-grow w-full max-h-[100%]">
-          <div className="flex flex-col flex-grow gap-3 h-full w-full px-10">
+          <div className="flex flex-col flex-grow gap-3 h-full w-full px-10 overflow-auto mt-[75px]">
             {
 
               masterAIChats.map((el: MasterAIChat) => ({ ...el, created_at: DateTime.fromISO(el.created_at) }))
               .map((el, index, arr) => {
                 const showDate = index === 0 || (
-                  el.created_at !== arr[index-1]?.created_at
+                  !el.created_at.hasSame(arr[index-1]?.created_at, 'day')
                 )
                 return (
                   <PromptWrapper key={el.id} el={el} showDate={ showDate } />
@@ -200,10 +202,13 @@ export default function MasterAI({ project, masterAIChats }: MasterAIProps) {
             }
           </div>
           <div className=" w-full order-t border-slate-300 flex flex-row px-5 py-4 gap-4">
-            <textarea placeholder="Type a question here." name="" id="" rows={1} className="text-lg bg-sky-200 bg-opacity-20 outline-none p-2 flex flex-grow resize-none rounded-lg border border-sky-500 font-medium text-">
+            <textarea value={query} onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => { setQuery((e.target as HTMLTextAreaElement).value) }} 
+              placeholder="Type a question here." name="" id="" rows={1} className="text-lg bg-sky-200 bg-opacity-20 outline-none p-2 flex flex-grow resize-none rounded-lg border border-sky-500 font-medium text-">
 
             </textarea>
-            <div className="flex justify-center items-center px-4 bg-sky-400 text-white rounded-lg">
+            <div className="flex justify-center items-center px-4 bg-sky-400 text-white rounded-lg cursor-pointer"
+              onClick={() => { askQuery(project.id, query).catch(err => console.error("Could not ask: ", JSON.stringify(err))).finally(() => { setQuery("") }) }}
+            >
               Ask
             </div>
           </div>
@@ -218,7 +223,7 @@ const PromptWrapper = ({ el, showDate }: { el: Omit<MasterAIChat, 'created_at'> 
     <div>
       {
         showDate ? 
-        <div className="flex flex-grow items-center justify-center border-b border-gray-400">
+        <div className="flex flex-grow items-center justify-center border-b border-gray-400 my-3">
           { el.created_at ? el.created_at.toLocaleString(DateTime.DATE_MED) : 'Invalid Date' }
         </div> : null
       }
@@ -236,8 +241,8 @@ const PromptWrapper = ({ el, showDate }: { el: Omit<MasterAIChat, 'created_at'> 
 
 const UserPrompt = ({ prompt }: { prompt: string, }) => {
   return (
-    <div className="flex max-w-[60%] self-end">
-      <div className=" bg-sky-500 rounded-lg text-white p-2 font-medium">
+    <div className="flex flex-grow flex-col self-end">
+      <div className=" bg-sky-500 max-w-[60%] rounded-lg text-white p-2 font-medium self-start">
         { prompt }
       </div>
     </div>
@@ -246,8 +251,8 @@ const UserPrompt = ({ prompt }: { prompt: string, }) => {
 
 const SystemPrompt = ({ prompt }: { prompt: string, }) => {
   return (
-    <div className="flex max-w-[60%] self-start">
-      <div className="bg-slate-400 rounded-lg text-white p-2 font-medium">
+    <div className="flex flex-col flex-grow ml-auto self-end">
+      <div className="bg-slate-400 rounded-lg max-w-[60%] text-white p-2 font-medium self-end">
         { prompt }
       </div>
     </div>

@@ -10,12 +10,16 @@ interface MasterAIChat {
 }
 
 interface UpdateChat {
-  id: string,
+  meeting_name: string,
   data: {
-    title: string,
-    completed: boolean
+    id: string,
+    agenda: string,
+    key_points: string[],
+    action_items: {
+      text: string,
+      completed: boolean
+    }[]
   }[],
-  created_at: string
 }
 
 export type {

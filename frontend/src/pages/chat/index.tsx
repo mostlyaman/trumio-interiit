@@ -12,6 +12,7 @@ import Updates from "~/components/chat/Updates";
 import { subscribeToFirestore } from '~/firebase/utils'
 import type { MasterAIChat, UpdateChat } from "~/components/chat/types";
 import type { Prisma } from "@prisma/client";
+import * as uuid from 'uuid'
 
 export type ProjectWithGithubRepos = Prisma.ProjectGetPayload<{ include: { github_repos: true } }>
 
@@ -27,6 +28,17 @@ export default function ChatPage() {
   const [masterAIChats, setMasterAIChats] = useState<MasterAIChat[]>([])
   const [updateChats, setUpdateChats] = useState<UpdateChat[]>([])
 
+  const updateMutation = api.updates.getItems.useMutation()
+
+  const askQueryMutation = api.master_ai.askMasterAi.useMutation()
+
+  const ask_query = async (projectId: string, query: string) => {
+    const res = await askQueryMutation.mutateAsync({ projectId, query })
+    setMasterAIChats([...masterAIChats, { id: uuid.v4(), type: 'user', data: query, user: { name: '', profilePicture: '' }, created_at: new Date().toISOString() }, { id: uuid.v4(), type: 'system', data: res, user: { name: '', profilePicture: '' }, created_at: new Date().toISOString() }])
+    console.log('A: ', res)
+  }
+
+
   const { user } = useUser()
 
   const pushToMasterAI = (new_chat: MasterAIChat) => {
@@ -37,8 +49,13 @@ export default function ChatPage() {
     setUpdateChats([...updateChats, new_chat])
   }
 
+  const getUpdates = async (selectedProject: ProjectWithGithubRepos) => {
+    console.log(await updateMutation.mutateAsync({ projectId: selectedProject.id }))
+  }
+
   useEffect(() => {
     if (selectedProject && user) {
+      getUpdates(selectedProject).catch(() => console.error("Could not get updates."))
       return subscribeToFirestore(selectedProject.id, user?.id, pushToMasterAI, pushToUpdates)
     } else {
       setMasterAIChats([])
@@ -149,8 +166,8 @@ export default function ChatPage() {
           {
             selectedProject ?
 
-              projectChat === 'Master AI' ? <MasterAI project={selectedProject} masterAIChats={masterAIChats} /> :
-                projectChat === 'Updates' ? <Updates project={selectedProject} /> :
+              projectChat === 'Master AI' ? <MasterAI project={selectedProject} askQuery={ask_query} masterAIChats={masterAIChats} /> :
+                projectChat === 'Updates' ? <Updates updates={updateMutation.data ?? []} project={selectedProject} /> :
                   projectChat === 'Resource Sharing' ? <div></div> :
                     projectChat === 'Discussions' ? <div></div> :
                       projectChat === 'Payments' ? <div></div> :

@@ -19,7 +19,8 @@ export const env = createEnv({
       .default("development"),
     CLERK_SECRET_KEY: z.string(),
     NEXT_PUBLIC_CHAT_SOCKET_CONNECT: z.string(),
-    AI_URL: z.string()
+    AI_URL: z.string(),
+    CHROMA_URL: z.string()
   },
 
   /**
@@ -47,8 +48,9 @@ export const env = createEnv({
     NEXT_PUBLIC_CHAT_SOCKET_CONNECT: process.env.NEXT_PUBLIC_CHAT_SOCKET_CONNECT,
     NEXT_PUBLIC_PUBLIC_VAPID_KEY: process.env.NEXT_PUBLIC_PUBLIC_VAPID_KEY,
     NEXT_PUBLIC_MESSAGES_COUNT_TO_PRELOAD: process.env.NEXT_PUBLIC_MESSAGES_COUNT_TO_PRELOAD,
-    AI_URL: process.env.AI_URL
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    AI_URL: process.env.AI_URL,
+    CHROMA_URL: process.env.CHROMA_URL
+    // NEXT_PUBLIC_CLIENTVAR: process,.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

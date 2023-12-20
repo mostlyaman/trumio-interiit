@@ -9,7 +9,6 @@ import {
 import { clerkClient } from "@clerk/nextjs/server";
 import * as uuid from 'uuid'
 import { getMilestones } from "~/langchain/milestone";
-import { getMoM } from "~/langchain/mom";
 
 export const projectRouter = createTRPCRouter({
   hello: publicProcedure
@@ -285,19 +284,4 @@ export const projectRouter = createTRPCRouter({
         }
       }),
 
-      getMOM: privateProcedure
-      .input(z.object({ transcript: z.string() }))
-      .mutation(async ({ctx: {db, userId}, input}) => {
-        const result = await getMoM(input.transcript)
-        
-        if(!result){
-          return new TRPCError({'code': 'BAD_REQUEST', 'message': 'Error generating milestones.'})
-        }
-        if(result.success) {
-          return result.data
-        } else {
-          return new TRPCError({'code': 'BAD_REQUEST', 'message': result.data})
-        }
-        
-      })
 });

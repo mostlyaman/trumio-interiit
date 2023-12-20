@@ -74,7 +74,11 @@ model Updates {
   projectId  String
   user       User?    @relation(fields: [userId], references: [id])
   userId     String?
-  data       Json
+  meeting_name String
+  agenda String
+  key_items String[]
+  action_items String[]
+  action_items_status Boolean[]
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
